@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Controle de Vendas</title>
+<style>
+:root {
+  --primary: #2f7fb3;
+  --primary-hover: #25658d;
+  --danger: #dc2626;
+  --background: #f4f7fb;
+  --card-bg: #fff;
+  --text-dark: #333;
+  --border-color: #ddd;
+}
+body { font-family: "Segoe UI", Arial, sans-serif; background: var(--background); margin: 0; padding: 20px; color: var(--text-dark); }
+h1 { text-align: center; color: var(--primary); margin-bottom: 25px; }
+.container { max-width: 1200px; margin: 0 auto; background: var(--card-bg); padding: 25px; border-radius: 14px; box-shadow: 0px 6px 18px rgba(0,0,0,0.08); }
+.filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.filters input, .filters select { padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; }
+button { padding: 10px 18px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+button:hover { background: var(--primary-hover); }
+table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
+th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
+th { background: var(--primary); color: white; }
+tr:nth-child(even) { background: #f9fcff; }
+tr:hover { background: #e9f3fa; }
+.action-btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; color: white; transition: 0.2s; }
+.remove-btn { background: var(--danger); } .remove-btn:hover { background: #b02a37; }
+.total { text-align: right; font-weight: bold; margin-top: 10px; }
+.back { text-align: center; margin-top: 20px; }
+.back a { color: var(--primary); text-decoration: none; font-size: 15px; font-weight: bold; }
+.back a:hover { text-decoration: underline; }
+
+.troca-btn {
+  background: #f59e0b;
+}
+.troca-btn:hover {
+  background: #d97706;
+}
+
+</style>
+</head>
+<body>
+<h1>📊 Controle de Vendas</h1>
+
+<div class="container">
+
+  <div class="filters">
+    <input type="date" id="filtroData">
+    <input type="text" id="filtroCliente" placeholder="Filtrar por cliente">
+    <input type="text" id="filtroProduto" placeholder="Filtrar por produto">
+    <button id="btnFiltrar">Filtrar</button>
+    <button id="btnLimpar">Limpar</button>
+  </div>
+
+  <table id="tabelaVendas">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Cliente</th>
+        <th>Produtos</th>
+        <th>Total</th>
+        <th>Desconto</th>
+        <th>Total Final</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="total">Total Geral: R$ <span id="totalGeral">0.00</span></div>
+
+</div>
+
+<div class="back"><a href="painel.html">⬅ Voltar ao Painel</a></div>
+
+<div id="modalTroca" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+  <div style="background:#fff; padding:20px; border-radius:12px; width:400px;">
+    <h3>🔄 Trocar Itens da Venda</h3>
+
+    <label>Produto</label>
+<select id="produtoSelect" style="width:100%; padding:8px; margin-bottom:10px;"></select>
+
+<label>Quantidade</label>
+<input type="number" id="novaQtd" min="1" style="width:100%; padding:8px; margin-bottom:10px;">
+
+<label>Valor</label>
+<input type="number" id="novoValor" step="0.01" style="width:100%; padding:8px; margin-bottom:10px;">
+
+
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button onclick="fecharTroca()">Cancelar</button>
+      <button class="troca-btn" onclick="confirmarTroca()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+    // Verificar se o usuario esta logado
+  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
+    window.location.href = 'index.html'; // Redirecionar para login
+  }
+
+let vendas = [];
+
+async function confirmarTroca() {
+  const index = document.getElementById("produtoSelect").value;
+
+  if (index === "") {
+    alert("Selecione um produto");
+    return;
+  }
+
+  const itemOriginal = itensVendaAtual[index];
+
+  const quantidade = Number(document.getElementById("novaQtd").value);
+  const preco = Number(document.getElementById("novoValor").value);
+
+  if (!quantidade || !preco) {
+    alert("Preencha quantidade e valor");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/trocarItensVenda", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        venda_id: vendaTrocaId,
+        itens: [
+          {
+            produto_id: itemOriginal.produto_id,
+            tamanho: itemOriginal.tamanho,
+            quantidade,
+            preco
+          }
+        ]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erro na troca");
+
+    alert("Itens trocados com sucesso!");
+    fecharTroca();
+    buscarVendas();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+
+// --- Buscar vendas do banco via API ---
+async function buscarVendas() {
+  try {
+    const res = await fetch("/api/relatorio"); // Busca todas as vendas
+    if (!res.ok) throw new Error("Erro ao buscar vendas do servidor");
+    vendas = await res.json();
+    renderTabela(vendas);
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// --- Renderizar tabela ---
+function renderTabela(lista){
+  const tbody = document.getElementById("tabelaVendas").querySelector("tbody");
+  tbody.innerHTML = "";
+
+  let totalGeral = 0;
+  const clientesTotais = {};
+
+  lista.forEach(venda => {
+    const total = parseFloat(venda.total) || 0;          // Total bruto da venda
+    const desconto = parseFloat(venda.desconto) || 0;    // Valor do desconto aplicado
+    const totalFinal = total - desconto;                 // Total final da venda
+    totalGeral += totalFinal;
+
+    // Somar por cliente
+    if(!clientesTotais[venda.cliente]){
+      clientesTotais[venda.cliente] = { total: 0, desconto: 0 };
+    }
+    clientesTotais[venda.cliente].total += totalFinal;
+    clientesTotais[venda.cliente].desconto += desconto;
+
+    // Montar string de produtos
+    const produtosStr = (venda.produtos || [])
+      .map(p => `${p.descricao} (${p.tamanho}) x${p.quantidade}`)
+      .join(", ");
+
+    // Criar linha da venda
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${venda.data}</td>
+      <td>${venda.cliente}</td>
+      <td>${produtosStr}</td>
+      <td>R$ ${total.toFixed(2)}</td>
+      <td>R$ ${desconto.toFixed(2)}</td>
+      <td>R$ ${totalFinal.toFixed(2)}</td>
+      <td>
+        <button class="action-btn troca-btn" onclick='abrirTroca(${JSON.stringify(venda)})'>Trocar Itens</button>
+        <button class="action-btn remove-btn" onclick="cancelarVenda(${venda.venda_id})">Cancelar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // --- Resumo por cliente ---
+  if(Object.keys(clientesTotais).length > 0){
+    const resumoHeader = document.createElement("tr");
+    resumoHeader.innerHTML = `<td colspan="7" style="background:#dbe9f7;font-weight:bold;text-align:center;">Resumo por Cliente</td>`;
+    tbody.appendChild(resumoHeader);
+
+    Object.keys(clientesTotais).forEach(cliente => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>-</td>
+        <td>${cliente}</td>
+        <td>-</td>
+        <td>R$ ${(clientesTotais[cliente].total + clientesTotais[cliente].desconto).toFixed(2)}</td>
+        <td>R$ ${clientesTotais[cliente].desconto.toFixed(2)}</td>
+        <td>R$ ${clientesTotais[cliente].total.toFixed(2)}</td>
+        <td>-</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById("totalGeral").textContent = totalGeral.toFixed(2);
+}
+
+// --- Filtros ---
+document.getElementById("btnFiltrar").addEventListener("click", ()=>{
+  const data = document.getElementById("filtroData").value;
+  const cliente = document.getElementById("filtroCliente").value.toLowerCase();
+  const produto = document.getElementById("filtroProduto").value.toLowerCase();
+
+  const filtradas = vendas.filter(v=>{
+    let cond = true;
+    if(data) cond = cond && v.data===data;
+    if(cliente) cond = cond && v.cliente.toLowerCase().includes(cliente);
+    if(produto) cond = cond && (v.produtos || []).some(p=>p.descricao.toLowerCase().includes(produto));
+    return cond;
+  });
+  renderTabela(filtradas);
+});
+
+// --- Limpar filtros ---
+document.getElementById("btnLimpar").addEventListener("click", ()=>{
+  document.getElementById("filtroData").value = "";
+  document.getElementById("filtroCliente").value = "";
+  document.getElementById("filtroProduto").value = "";
+  renderTabela(vendas);
+});
+
+async function cancelarVenda(vendaId) {
+  if (!vendaId) {
+    alert("ID da venda inválido");
+    return;
+  }
+
+  if (!confirm("Deseja realmente cancelar esta venda?")) return;
+
+  try {
+    const res = await fetch("/api/cancelarVenda", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ venda_id: vendaId })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    alert("Venda cancelada com sucesso!");
+    buscarVendas();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+
+
+let vendaTrocaId = null;
+let itensVendaAtual = [];
+document.getElementById("produtoSelect").addEventListener("change", function () {
+  const index = this.value;
+  if (index === "") return;
+
+  const item = itensVendaAtual[index];
+  document.getElementById("novaQtd").value = item.quantidade;
+  document.getElementById("novoValor").value = item.preco;
+});
+
+
+function abrirTroca(venda) {
+
+  vendaTrocaId = venda.venda_id;
+  itensVendaAtual = venda.produtos || [];
+
+  const select = document.getElementById("produtoSelect");
+  select.innerHTML = `<option value="">Selecione o produto</option>`;
+
+  itensVendaAtual.forEach((p, index) => {
+    const opt = document.createElement("option");
+    opt.value = index; // usamos o índice
+    opt.textContent = `${p.descricao} (${p.tamanho})`;
+    select.appendChild(opt);
+  });
+
+  // limpar campos
+  document.getElementById("novaQtd").value = "";
+  document.getElementById("novoValor").value = "";
+
+  document.getElementById("modalTroca").style.display = "flex";
+}
+
+function fecharTroca() {
+  vendaTrocaId = null;
+  itensVendaAtual = [];
+  document.getElementById("produtoSelect").innerHTML = "";
+  document.getElementById("modalTroca").style.display = "none";
+}
+
+
+// --- Inicializar ---
+buscarVendas();
+</script>
+
+</body>
+</html>

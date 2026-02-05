@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 Recebimento</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+  .container { max-width: 500px; margin:auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
+  h2 { text-align:center; margin-bottom:20px; color:#2f7fb3; }
+  label { display:block; margin:10px 0 5px; font-weight:bold; }
+  select, input { width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-bottom:15px;}
+  .btn { width:100%; padding:10px; background:#007bff; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
+  .btn:hover { background:#0056b3; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h2>💰 Recebimento</h2>
+
+  <label>Cliente:</label>
+  <input type="text" id="cliente" disabled>
+
+  <label>Valor Total:</label>
+  <input type="text" id="valorTotal" disabled>
+
+  <label for="formaPagamento">Forma de Pagamento:</label>
+  <select id="formaPagamento">
+    <option value="dinheiro">Dinheiro</option>
+    <option value="pix">Pix</option>
+    <option value="debito">Cartão de Débito</option>
+    <option value="credito">Cartão de Crédito</option>
+    <option value="fiado">Consignado</option>
+  </select>
+
+  <button class="btn" onclick="finalizarRecebimento()">Finalizar</button>
+</div>
+
+<script>
+    // Verificar se o usuario esta logado
+  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
+    window.location.href = 'index.html'; // Redirecionar para login
+  }
+  
+const { jsPDF } = window.jspdf;
+
+// Recupera dados do PDV
+let venda = JSON.parse(localStorage.getItem("vendaAtual"));
+let carrinho = JSON.parse(localStorage.getItem("carrinhoAtual")) || [];
+
+document.getElementById("cliente").value = venda?.cliente || "";
+document.getElementById("valorTotal").value = venda?.total.toFixed(2) || "0.00";
+
+async function finalizarRecebimento(){
+  if(!venda) { alert("Nenhuma venda em andamento!"); return; }
+  const forma = document.getElementById("formaPagamento").value;
+
+  try {
+    // Prepara itens para enviar para API
+    const itensAPI = carrinho.map(item => ({
+  produto_id: item.produto_id, // usa o id certo do banco
+  quantidade: item.quantidade,
+  preco: item.preco,
+  tamanho: item.tamanho
+}));
+
+    // Chama API para salvar venda
+    const res = await fetch("/api/recebimentos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cliente_id: venda.cliente_id,
+        itens: itensAPI,
+        forma_pagamento: forma,
+        total: venda.total
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erro ao finalizar venda");
+
+    alert("Venda finalizada com sucesso!");
+
+    // Gera PDF da nota e redireciona automaticamente
+    gerarPDF();
+
+    // Limpa localStorage
+    localStorage.removeItem("vendaAtual");
+    localStorage.removeItem("carrinhoAtual");
+
+  } catch (err) {
+    alert("Erro: " + err.message);
+  }
+}
+
+function gerarPDF(){
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.setTextColor(47,127,179);
+  doc.text("💰 Nota de Venda", 105, 20, {align: "center"});
+
+  doc.setFontSize(12);
+  doc.setTextColor(0,0,0);
+  doc.text(`Cliente: ${venda.cliente}`, 20, 35);
+  doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 20, 43);
+
+  let startY = 55;
+  doc.setFont(undefined, "bold");
+  doc.text("Produto", 20, startY);
+  doc.text("Tamanho", 70, startY);
+  doc.text("Qtd", 100, startY);
+  doc.text("Preço", 120, startY);
+  doc.text("Subtotal", 150, startY);
+  doc.setFont(undefined, "normal");
+
+  startY += 7;
+  carrinho.forEach(item=>{
+    doc.text(item.descricao, 20, startY);
+    doc.text(item.tamanho, 70, startY);
+    doc.text(item.quantidade.toString(), 100, startY);
+    doc.text("R$ "+item.preco.toFixed(2), 120, startY);
+    doc.text("R$ "+item.subtotal.toFixed(2), 150, startY);
+    startY += 7;
+  });
+
+  doc.setFont(undefined, "bold");
+  doc.text(`Total: R$ ${venda.total.toFixed(2)}`, 150, startY+10);
+
+  // Salva PDF
+  doc.save(`nota_${venda.cliente}_${Date.now()}.pdf`);
+
+  // Redireciona automaticamente para PDV
+  window.location.href = "vendas.html";
+}
+</script>
+
+</body>
+</html>

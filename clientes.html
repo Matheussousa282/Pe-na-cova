@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👤 Controle de Clientes</title>
+  <style>
+    :root {
+      --primary: #2f7fb3;
+      --primary-hover: #25658d;
+      --danger: #dc2626;
+      --danger-hover: #b02a37;
+      --background: #f4f7fb;
+      --card-bg: #ffffff;
+      --text-dark: #333;
+      --text-light: #555;
+      --border-color: #ddd;
+    }
+
+    body { font-family: "Segoe UI", Arial, sans-serif; background: var(--background); margin: 0; padding: 20px; color: var(--text-dark); }
+    h1 { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 28px; }
+    .cliente-container { background: var(--card-bg); padding: 25px; border-radius: 14px; box-shadow: 0px 6px 18px rgba(0,0,0,0.08); max-width: 1000px; margin: 0 auto; overflow-x: auto; }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
+    label { font-weight: bold; font-size: 14px; color: var(--text-dark); margin-bottom: 6px; display: inline-block; }
+    input, textarea { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; width: 100%; transition: 0.2s; }
+    input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(47, 127, 179, 0.3); }
+    textarea { resize: vertical; min-height: 60px; }
+    button { grid-column: 1 / -1; padding: 14px; background: var(--primary); color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+    button:hover { background: var(--primary-hover); }
+    .filtro { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filtro input { flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; cursor: default; }
+    th, td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); text-align: left; }
+    th { background: var(--primary); color: white; font-size: 15px; font-weight: 600; cursor: pointer; user-select: none; }
+    tr:nth-child(even) { background: #f9fcff; }
+    tr:hover { background: #e9f3fa; }
+    td { font-size: 14px; color: var(--text-light); }
+    .action-btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 5px; color: white; transition: 0.2s; }
+    .edit-btn { background: var(--primary); }
+    .edit-btn:hover { background: var(--primary-hover); }
+    .delete-btn { background: var(--danger); }
+    .delete-btn:hover { background: var(--danger-hover); }
+    .back { text-align: center; margin-top: 25px; }
+    .back a { color: var(--primary); text-decoration: none; font-size: 15px; font-weight: bold; }
+    .back a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>👤 Controle de Clientes</h1>
+  <div class="cliente-container">
+    <form id="formCliente">
+      <div>
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" required>
+      </div>
+      <div>
+        <label for="telefone">Telefone</label>
+        <input type="text" id="telefone" required>
+      </div>
+      <div>
+        <label for="endereco">Endereço</label>
+        <input type="text" id="endereco" required>
+      </div>
+      <div>
+        <label for="observacoes">Observações</label>
+        <textarea id="observacoes"></textarea>
+      </div>
+      <button type="submit">Cadastrar / Atualizar Cliente</button>
+    </form>
+
+    <div class="filtro">
+      <input type="text" id="buscarCliente" placeholder="🔍 Buscar por nome...">
+    </div>
+
+    <table id="tabelaClientes">
+      <thead>
+        <tr>
+          <th data-key="nome">Nome</th>
+          <th data-key="telefone">Telefone</th>
+          <th data-key="endereco">Endereço</th>
+          <th data-key="observacoes">Observações</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="back">
+    <a href="painel.html">⬅ Voltar ao Painel</a>
+  </div>
+
+  <script>
+      // Verificar se o usuario esta logado
+  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
+    window.location.href = 'index.html'; // Redirecionar para login
+  }
+    const form = document.getElementById("formCliente");
+    const tabela = document.querySelector("#tabelaClientes tbody");
+    const buscarCliente = document.getElementById("buscarCliente");
+    const thElements = document.querySelectorAll("#tabelaClientes th[data-key]");
+
+    let clientes = [];
+    let editIndex = null;
+    let sortConfig = { key: null, direction: 'asc' };
+
+    // ------------------ FUNÇÕES API ------------------
+    async function fetchClientes() {
+      try {
+        const res = await fetch("/api/clientes");
+        if (!res.ok) throw new Error("Erro ao buscar clientes");
+        clientes = await res.json();
+        renderTabela();
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao buscar clientes: " + err.message);
+      }
+    }
+
+    async function salvarCliente(cliente) {
+  try {
+    let res;
+    if (editIndex !== null) {
+      const id = clientes[editIndex].id;
+      res = await fetch(`/api/clientes?id=${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cliente)
+      });
+    } else {
+      res = await fetch("/api/clientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cliente)
+      });
+    }
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Erro ao salvar cliente");
+    }
+
+    const data = await res.json();
+    if (editIndex !== null) {
+      clientes[editIndex] = data;
+      editIndex = null;
+    } else {
+      clientes.unshift(data);
+    }
+
+    renderTabela();
+    form.reset();
+  } catch (err) {
+    alert("Erro ao salvar cliente: " + err.message);
+  }
+}
+
+    // ------------------ RENDER TABELA ------------------
+    function renderTabela() {
+      tabela.innerHTML = "";
+      const busca = buscarCliente.value.toLowerCase();
+      let clientesFiltrados = clientes.filter(c => c.nome.toLowerCase().includes(busca));
+
+      if (sortConfig.key) {
+        clientesFiltrados.sort((a,b) => {
+          let valA = a[sortConfig.key]?.toString().toLowerCase();
+          let valB = b[sortConfig.key]?.toString().toLowerCase();
+          if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+
+      clientesFiltrados.forEach((cliente, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${cliente.nome}</td>
+          <td>${cliente.telefone}</td>
+          <td>${cliente.endereco}</td>
+          <td>${cliente.observacoes || ""}</td>
+          <td>
+            <button class="action-btn edit-btn" onclick="editarCliente(${index})">Editar</button>
+            <button class="action-btn delete-btn" onclick="excluirCliente(${cliente.id})">Excluir</button>
+          </td>
+        `;
+        tabela.appendChild(tr);
+      });
+      atualizarSetas();
+    }
+
+    function atualizarSetas() {
+      thElements.forEach(th => {
+        th.classList.remove('sort-asc','sort-desc');
+        if(sortConfig.key === th.dataset.key){
+          th.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+      });
+    }
+
+    // ------------------ EVENTOS ------------------
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const cliente = {
+        nome: document.getElementById("nome").value,
+        telefone: document.getElementById("telefone").value,
+        endereco: document.getElementById("endereco").value,
+        observacoes: document.getElementById("observacoes").value,
+      };
+      salvarCliente(cliente);
+    });
+
+    function editarCliente(index){
+      const cliente = clientes[index];
+      document.getElementById("nome").value = cliente.nome;
+      document.getElementById("telefone").value = cliente.telefone;
+      document.getElementById("endereco").value = cliente.endereco;
+      document.getElementById("observacoes").value = cliente.observacoes || "";
+      editIndex = index;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function excluirCliente(id){
+  if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+
+  console.log("Excluindo cliente com ID:", id);
+
+  try {
+    const res = await fetch(`/api/clientes?id=${id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Erro ao excluir cliente");
+    }
+
+    // remove da lista local
+    clientes = clientes.filter(c => c.id !== id);
+    renderTabela();
+
+    alert("Cliente excluído com sucesso!");
+  } catch (err) {
+    alert("Erro ao excluir cliente: " + err.message);
+  }
+}
+    buscarCliente.addEventListener("input", renderTabela);
+    thElements.forEach(th => {
+      th.addEventListener("click", () => {
+        const key = th.dataset.key;
+        if(sortConfig.key === key){
+          sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortConfig.key = key;
+          sortConfig.direction = 'asc';
+        }
+        renderTabela();
+      });
+    });
+
+    // ------------------ INICIAL ------------------
+    fetchClientes();
+  </script>
+</body>
+</html>

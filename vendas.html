@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 PDV Vendas</title>
+<style>
+:root {
+  --primary: #2f7fb3;
+  --primary-hover: #25658d;
+  --danger: #dc2626;
+  --danger-hover: #b02a37;
+  --background: #f4f7fb;
+  --card-bg: #fff;
+  --text-dark: #333;
+  --border-color: #ddd;
+  --success: #28a745;
+}
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--background);
+  margin:0;
+  padding:20px;
+  color: var(--text-dark);
+}
+h1 {
+  text-align:center;
+  color: var(--primary);
+  margin-bottom:25px;
+}
+.pdv-container {
+  max-width:1000px;
+  margin:0 auto;
+  background: var(--card-bg);
+  padding:25px;
+  border-radius:14px;
+  box-shadow:0px 6px 18px rgba(0,0,0,0.08);
+}
+.form-group {
+  display:grid;
+  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+  gap:20px;
+  margin-bottom:20px;
+}
+label {
+  font-weight:bold;
+  margin-bottom:6px;
+  display:inline-block;
+}
+input, select {
+  padding:10px;
+  border-radius:8px;
+  border:1px solid var(--border-color);
+  font-size:14px;
+  width:100%;
+}
+input:focus, select:focus {
+  border-color: var(--primary);
+  outline:none;
+  box-shadow:0 0 5px rgba(47,127,179,0.3);
+}
+button {
+  padding:12px 20px;
+  background: var(--primary);
+  color:white;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.3s;
+  margin-top:22px;
+}
+button:hover {
+  background: var(--primary-hover);
+}
+table {
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+  border-radius:12px;
+  overflow:hidden;
+}
+th, td {
+  padding:12px 15px;
+  border-bottom:1px solid var(--border-color);
+  text-align:left;
+}
+th {
+  background: var(--primary);
+  color:white;
+}
+tr:nth-child(even) {
+  background: #f9fcff;
+}
+tr:hover {
+  background:#e9f3fa;
+}
+.action-btn {
+  padding:6px 10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;
+  color:white;
+  transition:0.2s;
+}
+.remove-btn {
+  background: var(--danger);
+}
+.remove-btn:hover {
+  background: var(--danger-hover);
+}
+.total-container {
+  text-align:right;
+  margin-top:15px;
+  font-size:18px;
+  font-weight:bold;
+}
+.back {
+  text-align:center;
+  margin-top:25px;
+}
+.back a {
+  color:var(--primary);
+  text-decoration:none;
+  font-size:15px;
+  font-weight:bold;
+}
+.back a:hover {
+  text-decoration:underline;
+}
+.alert {
+  position: fixed;
+  top:20px;
+  right:20px;
+  background: var(--success);
+  color:#fff;
+  padding:12px 20px;
+  border-radius:8px;
+  display:none;
+  z-index:1000;
+}
+
+/* Modal */
+.modal {
+  display:none;
+  position:fixed;
+  z-index:1000;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+}
+.modal-content {
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  width:400px;
+  max-width:90%;
+}
+.modal-content h2 {
+  margin-top:0;
+  color:var(--primary);
+}
+</style>
+</head>
+<body>
+
+<h1>💰 PDV Vendas</h1>
+
+<div class="pdv-container">
+
+  <!-- Cliente -->
+  <div class="form-group">
+    <div>
+      <label for="cliente">Cliente</label>
+      <input list="listaClientes" id="cliente" placeholder="Digite cliente...">
+      <datalist id="listaClientes"></datalist>
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button type="button" id="btnCadastrarCliente">Cadastrar Cliente Rápido</button>
+    </div>
+  </div>
+
+  <!-- Produto, Tamanho e Quantidade -->
+  <div class="form-group">
+    <div>
+      <label for="produto">Produto</label>
+      <input list="listaProdutos" id="produto" placeholder="Digite produto...">
+      <datalist id="listaProdutos"></datalist>
+    </div>
+    <div>
+      <label for="tamanho">Tamanho</label>
+      <select id="tamanho"><option value="">Selecione o produto primeiro</option></select>
+    </div>
+    <div>
+      <label for="quantidade">Quantidade (Disponível: <span id="estoqueDisponivel">0</span>)</label>
+      <input type="number" id="quantidade" min="1" value="1">
+    </div>
+    <div>
+      <label>&nbsp;</label>
+      <button type="button" id="btnAdicionar">Adicionar ao Carrinho</button>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <table id="tabelaVenda">
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Tamanho</th>
+        <th>Quantidade</th>
+        <th>Preço Unitário</th>
+        <th>Subtotal</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="total-container">Total: R$ <span id="totalVenda">0.00</span></div>
+  <div style="text-align: center; margin-top: 15px;">
+    <button id="finalizarVenda">Finalizar Venda</button>
+  </div>
+
+</div>
+
+<div class="back"><a href="painel.html">⬅ Voltar ao Painel</a></div>
+
+<!-- Modal Cliente -->
+<div class="modal" id="modalCliente">
+  <div class="modal-content">
+    <h2>Cadastro Rápido</h2>
+    <label>Nome</label>
+    <input type="text" id="nomeCliente">
+    <label>Telefone</label>
+    <input type="text" id="telefoneCliente">
+    <label>Endereço</label>
+    <input type="text" id="enderecoCliente">
+    <label>Observação</label>
+    <input type="text" id="obsCliente">
+    <button id="salvarCliente">Salvar Cliente</button>
+  </div>
+</div>
+
+<!-- Alerta -->
+<div class="alert" id="alertBox"></div>
+
+<script>
+    // Verificar se o usuario esta logado
+  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
+    window.location.href = 'index.html'; // Redirecionar para login
+  }
+let estoque = [];
+let clientes = [];
+let carrinho = [];
+
+const produtoInput = document.getElementById("produto");
+const tamanhoSelect = document.getElementById("tamanho");
+const qtdInput = document.getElementById("quantidade");
+const estoqueDisponivelSpan = document.getElementById("estoqueDisponivel");
+const tabela = document.getElementById("tabelaVenda").querySelector("tbody");
+const totalVenda = document.getElementById("totalVenda");
+const clienteInput = document.getElementById("cliente");
+const listaClientes = document.getElementById("listaClientes");
+const listaProdutos = document.getElementById("listaProdutos");
+const alertBox = document.getElementById("alertBox");
+
+const API_BASE = "/api"; // ajuste se for diferente
+
+// ---------- Funções auxiliares ----------
+async function fetchClientes(){
+  const res = await fetch(`${API_BASE}/clientes`);
+  clientes = await res.json();
+  listaClientes.innerHTML = "";
+  clientes.forEach(c=>{
+    const opt = document.createElement("option");
+    opt.value = `${c.nome} - ${c.telefone}`;
+    listaClientes.appendChild(opt);
+  });
+}
+
+async function fetchProdutos(){
+  const res = await fetch(`${API_BASE}/produtos`);
+  estoque = await res.json();
+  listaProdutos.innerHTML = "";
+  const descricoes = [...new Set(estoque.map(p=>p.descricao))];
+  descricoes.forEach(d=>{
+    const opt = document.createElement("option");
+    opt.value = d;
+    listaProdutos.appendChild(opt);
+  });
+}
+
+function showAlert(msg){
+  alertBox.textContent = msg;
+  alertBox.style.display="block";
+  setTimeout(()=>{ alertBox.style.display="none"; },2000);
+}
+
+// ---------- Seleção de Produto ----------
+produtoInput.addEventListener("change", ()=>{
+  const prod = produtoInput.value;
+  tamanhoSelect.innerHTML = "<option value=''>Selecione Tamanho</option>";
+  if(!prod) return;
+  const tamanhos = estoque.filter(p=>p.descricao===prod).map(p=>p.tamanho);
+  tamanhos.forEach(t=>{
+    const opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = t;
+    tamanhoSelect.appendChild(opt);
+  });
+});
+
+tamanhoSelect.addEventListener("change", ()=>{
+  const prodEscolhido = produtoInput.value;
+  const tamanhoEscolhido = tamanhoSelect.value;
+  const prod = estoque.find(p=>p.descricao===prodEscolhido && p.tamanho===tamanhoEscolhido);
+  estoqueDisponivelSpan.textContent = prod ? prod.quantidade : 0;
+});
+
+// ---------- Carrinho ----------
+document.getElementById("btnAdicionar").addEventListener("click", ()=>{
+  const prodEscolhido = produtoInput.value;
+  const tamanhoEscolhido = tamanhoSelect.value;
+  const qtd = parseInt(qtdInput.value);
+  if(!prodEscolhido || !tamanhoEscolhido) return alert("Selecione produto e tamanho!");
+  const prod = estoque.find(p=>p.descricao===prodEscolhido && p.tamanho===tamanhoEscolhido);
+  if(!prod) return alert("Produto não encontrado!");
+  if(qtd > prod.quantidade) return alert("Quantidade maior que estoque disponível!");
+  carrinho.push({ produto_id: prod.id, descricao: prod.descricao, tamanho: prod.tamanho, quantidade: qtd, preco: parseFloat(prod.preco), subtotal: qtd * parseFloat(prod.preco) });
+  prod.quantidade -= qtd;
+  renderTabela();
+  qtdInput.value = 1;
+  estoqueDisponivelSpan.textContent = prod.quantidade;
+  showAlert("Produto adicionado ao carrinho!");
+});
+
+function renderTabela(){
+  tabela.innerHTML = "";
+  let total=0;
+  carrinho.forEach((item,idx)=>{
+    total+=item.subtotal;
+    const tr = document.createElement("tr");
+    tr.innerHTML=`<td>${item.descricao}</td><td>${item.tamanho}</td><td>${item.quantidade}</td><td>R$ ${item.preco.toFixed(2)}</td><td>R$ ${item.subtotal.toFixed(2)}</td><td><button class="action-btn remove-btn" onclick="removerItem(${idx})">Remover</button></td>`;
+    tabela.appendChild(tr);
+  });
+  totalVenda.textContent = total.toFixed(2);
+}
+
+function removerItem(idx){
+  let item = carrinho[idx];
+  const prod = estoque.find(p=>p.id===item.produto_id);
+  if(prod) prod.quantidade += item.quantidade;
+  carrinho.splice(idx,1);
+  renderTabela();
+  showAlert("Item removido do carrinho!");
+}
+
+// ---------- Finalizar Venda ----------
+document.getElementById("finalizarVenda").addEventListener("click", ()=>{
+  if(carrinho.length===0) return alert("Carrinho vazio!");
+  const clienteTexto = clienteInput.value.trim();
+  if(!clienteTexto) return alert("Selecione ou digite o cliente!");
+  const cliente = clientes.find(c=>`${c.nome} - ${c.telefone}`===clienteTexto);
+  if(!cliente) return alert("Cliente não encontrado!");
+  const total = carrinho.reduce((acc,i)=>acc+i.subtotal,0);
+  // Salva venda temporária no localStorage
+  const vendaAtual = {
+    cliente: cliente.nome,
+    cliente_id: cliente.id,
+    total,
+    itens: carrinho
+  };
+  localStorage.setItem("vendaAtual", JSON.stringify(vendaAtual));
+  localStorage.setItem("carrinhoAtual", JSON.stringify(carrinho));
+  // Redireciona para tela de Recebimento
+  window.location.href = "recebimentos.html"; // ajuste o nome do arquivo
+});
+
+// ---------- Modal Cliente ----------
+document.getElementById("btnCadastrarCliente").addEventListener("click", ()=>{ document.getElementById("modalCliente").style.display="flex"; });
+document.getElementById("salvarCliente").addEventListener("click", async ()=>{
+  const nome=document.getElementById("nomeCliente").value.trim();
+  const telefone=document.getElementById("telefoneCliente").value.trim();
+  const endereco=document.getElementById("enderecoCliente").value.trim();
+  const obs=document.getElementById("obsCliente").value.trim();
+  if(!nome || !telefone) return alert("Nome e telefone obrigatórios!");
+  try{
+    const res = await fetch(`${API_BASE}/clientes`, { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({nome,telefone,endereco,obs}) });
+    if(!res.ok) throw new Error("Erro ao cadastrar cliente");
+    document.getElementById("modalCliente").style.display="none";
+    await fetchClientes();
+    showAlert("Cliente cadastrado com sucesso!");
+  }catch(err){
+    console.error(err);
+    alert("Erro ao cadastrar cliente!");
+  }
+});
+
+// ---------- Inicialização ----------
+fetchClientes();
+fetchProdutos();
+</script>
+
+</body>
+</html>

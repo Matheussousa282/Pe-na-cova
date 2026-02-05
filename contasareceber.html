@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📑 Contas a Receber</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    table th, table td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    table th { background: #007bff; color: #fff; }
+    .btn { padding: 6px 12px; background: #28a745; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
+    .btn:hover { background: #218838; }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #b02a37; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📑 Contas a Receber (Consignado)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Data</th>
+          <th>Valor</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaFiados">
+        <tr><td colspan="5">Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+      // Verificar se o usuario esta logado
+  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
+    window.location.href = 'index.html'; // Redirecionar para login
+  }
+  
+    const API_BASE = "/api"; // Ajuste se necessário
+
+    async function carregarFiados() {
+      const tabela = document.getElementById("tabelaFiados");
+      try {
+        const res = await fetch(`${API_BASE}/contasareceber`);
+        if (!res.ok) throw new Error("Erro ao buscar contas a receber");
+        const fiados = await res.json();
+
+        if (fiados.length === 0) {
+          tabela.innerHTML = `<tr><td colspan="5">Nenhum fiado pendente</td></tr>`;
+          return;
+        }
+
+        tabela.innerHTML = "";
+        fiados.forEach((fiado) => {
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td>${fiado.cliente}</td>
+            <td>${fiado.data}</td>
+            <td>R$ ${parseFloat(fiado.valor).toFixed(2)}</td>
+            <td>${fiado.status}</td>
+            <td>
+              ${fiado.status !== "Pago" ? `<button class="btn" onclick="marcarPago(${fiado.id})">Marcar Pago</button>` : ""}
+              <button class="btn btn-danger" onclick="remover(${fiado.id})">Remover</button>
+            </td>
+          `;
+          tabela.appendChild(row);
+        });
+
+      } catch (err) {
+        tabela.innerHTML = `<tr><td colspan="5">Erro ao carregar contas: ${err.message}</td></tr>`;
+      }
+    }
+
+    async function marcarPago(id) {
+      try {
+        const res = await fetch(`${API_BASE}/contasareceber`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status: "Pago" })
+        });
+        if (!res.ok) throw new Error("Erro ao atualizar status");
+        carregarFiados();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function remover(id) {
+  if (!confirm("Deseja realmente remover esta conta?")) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/contasareceber?id=${id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) throw new Error("Erro ao remover conta");
+    carregarFiados();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+    carregarFiados();
+  </script>
+</body>
+</html>

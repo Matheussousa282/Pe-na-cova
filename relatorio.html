@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📈 Relatórios Avançados</title>
+<style>
+:root {
+  --primary: #2f7fb3;
+  --primary-hover: #25658d;
+  --danger: #dc2626;
+  --background: #f4f7fb;
+  --card-bg: #fff;
+  --text-dark: #333;
+  --border-color: #ddd;
+}
+body { font-family: "Segoe UI", Arial, sans-serif; background: var(--background); margin: 0; padding: 20px; color: var(--text-dark); }
+h1 { text-align: center; color: var(--primary); margin-bottom: 25px; }
+.container { max-width: 1200px; margin: 0 auto; background: var(--card-bg); padding: 25px; border-radius: 14px; box-shadow: 0px 6px 18px rgba(0,0,0,0.08); }
+.filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.filters input, .filters select { padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; }
+button { padding: 10px 18px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+button:hover { background: var(--primary-hover); }
+table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; margin-top: 15px; }
+th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
+th { background: var(--primary); color: white; }
+tr:nth-child(even) { background: #f9fcff; }
+tr:hover { background: #e9f3fa; }
+.summary { margin-top: 20px; font-weight: bold; display: flex; gap: 40px; }
+.summary div { font-size: 16px; }
+.back { text-align: center; margin-top: 20px; }
+.back a { color: var(--primary); text-decoration: none; font-size: 15px; font-weight: bold; }
+.back a:hover { text-decoration: underline; }
+.no-data { text-align: center; padding: 20px; font-style: italic; color: var(--danger); }
+@media print {
+  .filters, .back { display: none; }
+}
+</style>
+</head>
+<body>
+
+<h1>📈 Relatórios Avançados</h1>
+
+<div class="container">
+  <div class="filters">
+    <input type="date" id="dataInicio" placeholder="Data Início">
+    <input type="date" id="dataFim" placeholder="Data Fim">
+    <input type="text" id="filtroCliente" placeholder="Cliente">
+    <input type="text" id="filtroProduto" placeholder="Produto">
+    <button id="btnGerar">Gerar Relatório</button>
+    <button id="btnLimpar">Limpar</button>
+    <button id="btnImprimir">Imprimir</button>
+  </div>
+
+  <table id="tabelaRelatorios">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Cliente</th>
+        <th>Desconto (%)</th>
+        <th>Produto</th>
+        <th>Tamanho</th>
+        <th>Quantidade</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="no-data" id="noData" style="display:none;">Nenhuma venda encontrada com os filtros selecionados.</div>
+
+  <div class="summary">
+    <div>Total Geral: R$ <span id="totalGeral">0.00</span></div>
+    <div>Total de Produtos Vendidos: <span id="totalProdutos">0</span></div>
+  </div>
+</div>
+
+<div class="back"><a href="painel.html">⬅ Voltar ao Painel</a></div>
+
+<script>
+    // Verificar se o usuario esta logado
+  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
+    window.location.href = 'index.html'; // Redirecionar para login
+  }
+let vendas = [];
+
+// --- Buscar dados do banco via API ---
+async function buscarVendas() {
+  const inicio = document.getElementById("dataInicio").value;
+  const fim = document.getElementById("dataFim").value;
+  const cliente = document.getElementById("filtroCliente").value;
+  const produto = document.getElementById("filtroProduto").value;
+
+  const params = new URLSearchParams({
+    dataInicio: inicio || '',
+    dataFim: fim || '',
+    cliente: cliente || '',
+    produto: produto || ''
+  });
+
+  try {
+    const res = await fetch(`/api/relatorio?${params.toString()}`);
+    if (!res.ok) throw new Error("Erro ao buscar vendas do banco");
+    vendas = await res.json();
+    gerarRelatorio();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+// --- Gerar relatório na tabela ---
+function gerarRelatorio() {
+  const tbody = document.getElementById("tabelaRelatorios").querySelector("tbody");
+  tbody.innerHTML = "";
+
+  let totalGeral = 0;
+  let totalProdutos = 0;
+
+  if (!vendas.length) {
+    document.getElementById("noData").style.display = "block";
+    document.getElementById("totalGeral").textContent = "0.00";
+    document.getElementById("totalProdutos").textContent = "0";
+    return;
+  } else {
+    document.getElementById("noData").style.display = "none";
+  }
+
+  vendas.forEach(venda => {
+    (venda.produtos || []).forEach(p => {
+      totalGeral += p.subtotal || 0;
+      totalProdutos += p.quantidade || 0;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${venda.data || '-'}</td>
+        <td>${venda.cliente || '-'}</td>
+        <td>${venda.desconto.toFixed(2)}%</td> <!-- mostra o desconto -->
+        <td>${p.descricao || '-'}</td>
+        <td>${p.tamanho || '-'}</td>
+        <td>${p.quantidade || 0}</td>
+        <td>R$ ${p.subtotal ? p.subtotal.toFixed(2) : '0.00'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  });
+
+  document.getElementById("totalGeral").textContent = totalGeral.toFixed(2);
+  document.getElementById("totalProdutos").textContent = totalProdutos;
+}
+
+// --- Eventos ---
+document.getElementById("btnGerar").addEventListener("click", buscarVendas);
+document.getElementById("btnLimpar").addEventListener("click", () => {
+  document.getElementById("dataInicio").value = "";
+  document.getElementById("dataFim").value = "";
+  document.getElementById("filtroCliente").value = "";
+  document.getElementById("filtroProduto").value = "";
+  buscarVendas();
+});
+document.getElementById("btnImprimir").addEventListener("click", () => window.print());
+
+// Inicializar
+buscarVendas();
+</script>
+</body>
+</html>

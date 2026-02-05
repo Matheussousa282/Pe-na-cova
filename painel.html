@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Painel Inicial - Sistema de Vendas</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Arial, sans-serif; }
+  body { display: flex; min-height: 100vh; background: #737373; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 240px;
+    background: #1f2937;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+  .sidebar h2 { margin-bottom: 20px; }
+  .sidebar nav a {
+    display: block;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    color: #d1d5db;
+    text-decoration: none;
+    transition: 0.3s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+  .sidebar nav a:hover { background: #374151; color: white; transform: translateX(3px); }
+
+  /* Rodapé da sidebar */
+  .sidebar-footer {
+    margin-top: auto;
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+  }
+  .sidebar-footer a {
+    color: #9ca3af;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 8px;
+    transition: 0.3s;
+  }
+  .sidebar-footer a:hover { color: #fff; }
+
+  /* Main */
+  .main {
+  flex: 1;
+  padding: 20px;
+
+  /* Fundo centralizado */
+  background: url('logo.png') no-repeat center center;
+  background-size: contain; /* mantém a proporção da logo */
+  background-attachment: fixed; /* opcional: mantém a logo fixa */
+}
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .topbar h1 { font-size: 22px; color: #111827; }
+
+  /* Painel de botões */
+  .buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+  }
+  .button-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: 0.2s;
+  }
+  .button-card:hover { transform: scale(1.03); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+  .button-title { font-weight: 600; color: #111827; margin-bottom: 10px; }
+  .button-actions { display: flex; justify-content: space-between; }
+  .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: 0.3s; }
+  .btn-primary { background: #2563eb; color: white; }
+  .btn-danger { background: #dc2626; color: white; }
+  .btn:hover { opacity: 0.9; }
+
+</style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>💼 Sistema</h2>
+    <nav>
+      <a href="dashboard.html" class="btn">📊 Dashboard</a>
+      <a href="clientes.html" class="btn">👤 Clientes</a>
+      <a href="estoque.html" class="btn">📦 Produtos</a>
+      <a href="vendas.html" class="btn">💰 Vendas</a> 
+      <a href="contasareceber.html" class="btn">📑 Contas a Receber</a>
+      <a href="relatorio.html" class="btn">📈 Relatórios</a>
+    </nav>
+
+    <!-- Rodapé Sidebar -->
+    <div class="sidebar-footer">
+      <button class="btn btn-danger" onclick="sair()">🚪 Sair</button>
+
+      <a href="https://www.instagram.com/mts_computadores/" target="_blank">Desenvolvido por MTSComputadores</a>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1>Painel Inicial</h1>
+    </div>
+
+    <div class="buttons-grid">
+      <div class="button-card">
+        <div class="button-title">Vendas</div>
+        <div class="button-actions">
+          <button class="btn btn-primary" onclick="window.location.href='vendas.html'">Abrir</button>
+        </div>
+      </div>
+      <div class="button-card">
+        <div class="button-title">Produtos</div>
+        <div class="button-actions">
+          <button class="btn btn-primary" onclick="window.location.href='estoque.html'">Abrir</button>
+        </div>
+      </div>
+      <div class="button-card">
+        <div class="button-title">Clientes</div>
+        <div class="button-actions">
+          <button class="btn btn-primary" onclick="window.location.href='clientes.html'">Abrir</button>
+        </div>
+      </div>
+      <div class="button-card">
+        <div class="button-title">Relatórios</div>
+        <div class="button-actions">
+          <button class="btn btn-primary" onclick="window.location.href='relatorio.html'">Abrir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Bloqueia acesso se não estiver logado
+if(sessionStorage.getItem('isLoggedIn') !== 'true') {
+  window.location.href = 'index.html';
+}
+
+// Função sair
+function sair() {
+  sessionStorage.removeItem('isLoggedIn'); // remove login
+  window.location.href = 'index.html';
+}
+</script>
+
+</body>
+</html>
