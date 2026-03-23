@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "ID do produto é obrigatório" });
       }
 
-      const result = await query("DELETE FROM produtos WHERE id=$1 RETURNING *", [id]);
+      const result = await query("DELETE FROM produtos WHERE id=$1 RETURNING *", [Number(id)]);
 
       if (result.rowCount === 0) {
         return res.status(404).json({ error: "Produto não encontrado" });
@@ -94,4 +94,9 @@ export default async function handler(req, res) {
     console.error("Erro na API produtos:", error.message);
     return res.status(500).json({ error: "Erro interno no servidor" });
   }
+}
+
+} catch (error) {
+  console.error("Erro na API produtos:", error.message);
+  return res.status(500).json({ error: error.message }); // <- mensagem real
 }
