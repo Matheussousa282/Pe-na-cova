@@ -357,10 +357,66 @@
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.error { background: var(--red); }
 
-  @media (max-width: 640px) {
-    .actions { flex-direction: column; }
-    thead th:nth-child(3) { display: none; }
-    td:nth-child(3) { display: none; }
+  /* ---------- Mobile ---------- */
+  @media (max-width: 700px) {
+    body { padding: 20px 12px 48px; }
+    .page-head h1 { font-size: 21px; }
+    .page-head p { font-size: 13px; }
+
+    .summary { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat { padding: 12px 14px; }
+    .stat .value { font-size: 19px; }
+
+    .toolbar { flex-direction: column; }
+    .search-field, .toolbar select { width: 100%; min-width: 0; }
+
+    form { grid-template-columns: 1fr; padding: 4px 16px 18px; }
+    .panel-head { padding: 14px 16px; }
+    .form-actions { flex-wrap: wrap; }
+    .form-actions .btn, .form-actions .btn.secondary { width: 100%; text-align: center; }
+
+    /* Tabela vira lista de cards */
+    .table-container { border-radius: 10px; overflow-x: visible; }
+    table, thead, tbody, tr { display: block; width: 100%; }
+    thead { display: none; }
+    tbody tr {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-soft);
+      box-shadow: none !important;
+      border-left: 4px solid var(--border);
+    }
+    tbody tr.status-ok { border-left-color: var(--primary); }
+    tbody tr.status-baixo { border-left-color: var(--amber); }
+    tbody tr.status-esgotado { border-left-color: var(--red); }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 7px 0;
+      border: none;
+      font-size: 14px;
+      text-align: right;
+    }
+    td::before {
+      content: attr(data-label);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      text-align: left;
+      flex-shrink: 0;
+    }
+    td.codigo, td.preco { font-size: 13.5px; }
+
+    td.td-actions { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 12px; }
+    td.td-actions::before { margin-bottom: 2px; }
+    td.td-actions .actions { width: 100%; justify-content: stretch; }
+    td.td-actions .action-btn { flex: 1; text-align: center; }
+
+    .qty-control { margin-left: auto; }
   }
 </style>
 </head>
@@ -574,18 +630,18 @@ function renderTabela() {
     if (status === 'esgotado') badge = '<span class="badge esgotado">Esgotado</span>';
 
     tr.innerHTML = `
-      <td class="codigo">${produto.codigo}</td>
-      <td>${produto.descricao}${badge}</td>
-      <td>${produto.tamanho}</td>
-      <td>
+      <td class="codigo" data-label="Código">${produto.codigo}</td>
+      <td data-label="Descrição">${produto.descricao}${badge}</td>
+      <td data-label="Tamanho">${produto.tamanho}</td>
+      <td data-label="Quantidade">
         <div class="qty-control">
           <button type="button" class="qty-btn" data-action="dec" data-id="${produto.id}" ${produto.quantidade <= 0 ? 'disabled' : ''}>−</button>
           <span class="qty-value">${produto.quantidade}</span>
           <button type="button" class="qty-btn" data-action="inc" data-id="${produto.id}">+</button>
         </div>
       </td>
-      <td class="preco">R$ ${parseFloat(produto.preco).toFixed(2)}</td>
-      <td>
+      <td class="preco" data-label="Preço">R$ ${parseFloat(produto.preco).toFixed(2)}</td>
+      <td class="td-actions" data-label="Ações">
         <div class="actions">
           <button type="button" class="action-btn edit-btn" data-id="${produto.id}">Editar</button>
           <button type="button" class="action-btn delete-btn" data-id="${produto.id}">Excluir</button>
