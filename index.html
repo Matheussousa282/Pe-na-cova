@@ -3,165 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💻 Login Profissional</title>
+<title>Entrar · Pé Na Cova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+  :root {
+    --ink: #101826;
+    --ink-soft: #4b5768;
+    --muted: #8a94a3;
+    --primary: #0e6b5c;
+    --primary-hover: #0a5548;
+    --primary-tint: #e4f2ee;
+    --red: #b0362b;
+    --red-tint: #fbe9e7;
+    --border: #dde2ea;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; }
+  html, body { height: 100%; }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(900px 500px at 15% 10%, #12806d 0%, transparent 60%),
+      radial-gradient(900px 600px at 90% 90%, #0a4a40 0%, transparent 55%),
+      #0d3d34;
+    padding: 20px;
+  }
 
-* { box-sizing: border-box; margin:0; padding:0; font-family: 'Inter', sans-serif; }
-body, html {
-  height: 100%;
-  overflow: hidden;
-}
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 40px 32px 32px;
+    box-shadow: 0 24px 60px -20px rgba(0,0,0,.45);
+  }
 
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-  position: relative;
-}
+  .brand {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    background: var(--primary);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
 
-/* Partículas de fundo */
-body::before {
-  content: '';
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1), transparent 40%), 
-              radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1), transparent 40%);
-  animation: moveBg 10s linear infinite;
-  z-index: 0;
-}
+  h1 { font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; margin-bottom: 4px; }
+  .subtitle { font-size: 13.5px; color: var(--muted); margin-bottom: 28px; }
 
-@keyframes moveBg {
-  0% { transform: translate(0,0);}
-  50% { transform: translate(-50px, 50px);}
-  100% { transform: translate(0,0);}
-}
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field input {
+    width: 100%;
+    padding: 12px 13px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    font-size: 14.5px;
+    font-family: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-tint);
+  }
 
-/* Container de login */
-.login-container {
-  position: relative;
-  background: #fff;
-  padding: 50px 30px;
-  border-radius: 20px;
-  width: 100%;
-  max-width: 400px;
-  text-align: center;
-  z-index: 1;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-  animation: fadeIn 1s ease;
-}
+  button.submit {
+    width: 100%;
+    margin-top: 6px;
+    padding: 13px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, transform .05s;
+    font-family: inherit;
+  }
+  button.submit:hover { background: var(--primary-hover); }
+  button.submit:active { transform: translateY(1px); }
 
-/* Logo */
-.login-container .logo {
-  width: 80px;
-  height: 80px;
-  background: #4facfe;
-  margin: 0 auto 25px auto;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-size: 32px;
-  font-weight: bold;
-  box-shadow: 0 0 15px rgba(79,172,254,0.5);
-}
+  .alert {
+    margin-top: 14px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--red-tint);
+    color: var(--red);
+    font-size: 13.5px;
+    font-weight: 600;
+    display: none;
+    text-align: center;
+  }
 
-/* Título */
-.login-container h1 {
-  margin-bottom: 30px;
-  font-size: 26px;
-  color: #333;
-}
-
-/* Float label */
-.input-group {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 14px 12px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  outline: none;
-  font-size: 15px;
-  transition: all 0.3s ease;
-}
-
-.input-group label {
-  position: absolute;
-  left: 12px;
-  top: 14px;
-  background: white;
-  padding: 0 5px;
-  color: #999;
-  transition: 0.3s ease;
-  pointer-events: none;
-}
-
-.input-group input:focus + label,
-.input-group input:not(:placeholder-shown) + label {
-  top: -10px;
-  font-size: 12px;
-  color: #4facfe;
-}
-
-/* Botão */
-.login-container button {
-  width: 100%;
-  padding: 14px;
-  background: linear-gradient(90deg,#4facfe,#00f2fe);
-  border: none;
-  border-radius: 12px;
-  color: #fff;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.login-container button:hover {
-  background: linear-gradient(90deg,#00f2fe,#4facfe);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
-
-/* Alerta */
-.alert {
-  margin-top: 15px;
-  color: #dc2626;
-  font-weight: 600;
-  display: none;
-  text-align: center;
-}
-
-@keyframes fadeIn {
-  0% {opacity: 0; transform: translateY(-20px);}
-  100% {opacity: 1; transform: translateY(0);}
-}
+  .link {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
+  .link a { color: var(--primary); text-decoration: none; font-weight: 700; }
+  .link a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 
-<div class="login-container">
-  <div class="logo">💰</div>
-  <h1>Bem-vindo Pé Na Cova</h1>
-  
-  <div class="input-group">
-    <input type="text" id="usuario" placeholder=" " required>
-    <label>Usuário</label>
+<div class="card">
+  <div class="brand">PC</div>
+  <h1>Bem-vindo de volta</h1>
+  <p class="subtitle">Entre com sua conta para acessar o painel Pé Na Cova.</p>
+
+  <div class="field">
+    <label for="usuario">Usuário</label>
+    <input type="text" id="usuario" autocomplete="username">
   </div>
-  
-  <div class="input-group">
-    <input type="password" id="senha" placeholder=" " required>
-    <label>Senha</label>
+  <div class="field">
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" autocomplete="current-password">
   </div>
-  
-  <button onclick="login()">Entrar</button>
-  <div class="alert" id="alertMsg">Usuário ou senha incorretos!</div>
+
+  <button class="submit" onclick="login()">Entrar</button>
+  <div class="alert" id="alertMsg">Usuário ou senha incorretos.</div>
+
+  <div class="link">Ainda não tem conta? <a href="cadastro.html">Criar conta</a></div>
 </div>
 
 <script>
@@ -170,16 +140,18 @@ function login() {
   const pass = document.getElementById("senha").value.trim();
   const alertMsg = document.getElementById("alertMsg");
 
-  // Exemplo de validação simples
-  if(user === "Pe na cova" && pass === "2634") {
-    // Marca usuário como logado
+  if (user === "Pe na cova" && pass === "2634") {
     sessionStorage.setItem("isLoggedIn", "true");
     alertMsg.style.display = "none";
-    window.location.href = "painel.html"; // Redireciona para o painel
+    window.location.href = "painel.html";
   } else {
     alertMsg.style.display = "block";
   }
 }
+
+document.getElementById("senha").addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
 </script>
 
 </body>
