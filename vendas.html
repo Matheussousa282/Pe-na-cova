@@ -72,6 +72,173 @@
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 300; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.error { background: var(--red); }
+
+  /* ===== MOBILE ===== */
+  @media (max-width: 700px) {
+    body { padding: 14px 10px 30px; }
+    .wrap { width: 100%; }
+    .page-head { margin-bottom: 14px; }
+    .page-head h1 { font-size: 22px; }
+    .page-head p { font-size: 12.5px; line-height: 1.4; }
+
+    .panel {
+      padding: 15px 12px;
+      margin-bottom: 12px;
+      border-radius: 11px;
+    }
+    .panel h2 { font-size: 12px; margin-bottom: 12px; }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .field { width: 100%; gap: 5px; }
+    label { font-size: 12px; }
+
+    input, select {
+      min-height: 44px;
+      padding: 10px 11px;
+      font-size: 14px;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 14px;
+      font-size: 13.5px;
+    }
+
+    /* Carrinho em formato de card no celular */
+    .table-container {
+      border-radius: 11px;
+      margin-bottom: 12px;
+    }
+
+    #tabelaVenda,
+    #tabelaVenda tbody {
+      display: block;
+      width: 100%;
+    }
+
+    #tabelaVenda thead { display: none; }
+
+    #tabelaVenda tbody tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px 12px;
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    #tabelaVenda tbody td {
+      display: block;
+      padding: 0;
+      font-size: 12.5px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    #tabelaVenda tbody td::before {
+      display: block;
+      color: var(--muted);
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 3px;
+    }
+
+    #tabelaVenda tbody td:nth-child(1) {
+      grid-column: 1 / -1;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    #tabelaVenda tbody td:nth-child(1)::before { content: "Produto"; }
+    #tabelaVenda tbody td:nth-child(2)::before { content: "Tamanho"; }
+    #tabelaVenda tbody td:nth-child(3)::before { content: "Quantidade"; }
+    #tabelaVenda tbody td:nth-child(4)::before { content: "Preço unitário"; }
+    #tabelaVenda tbody td:nth-child(5)::before { content: "Subtotal"; }
+
+    #tabelaVenda tbody td:nth-child(6) {
+      grid-column: 1 / -1;
+      margin-top: 2px;
+    }
+
+    .action-btn {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+      font-size: 12px;
+    }
+
+    .empty-cart {
+      padding: 28px 14px;
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+
+    .total-bar {
+      margin-bottom: 12px;
+    }
+
+    .total-bar .box {
+      width: 100%;
+      padding: 13px 15px;
+      font-size: 16px;
+      text-align: right;
+    }
+
+    #finalizarVenda {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 18px !important;
+      font-size: 14px !important;
+    }
+
+    .back { margin-top: 16px; }
+    .back a { font-size: 12.5px; }
+
+    .modal-overlay {
+      padding: 10px;
+      align-items: flex-end;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 100%;
+      max-height: calc(100vh - 20px);
+      overflow-y: auto;
+      padding: 18px 14px;
+      border-radius: 14px 14px 10px 10px;
+    }
+
+    .modal-actions {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+
+    .modal-actions .btn { width: 100%; }
+
+    #toast {
+      width: calc(100% - 20px);
+      bottom: 10px;
+      padding: 11px 14px;
+      font-size: 13px;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 380px) {
+    body { padding-left: 7px; padding-right: 7px; }
+    .panel { padding: 13px 10px; }
+    .page-head h1 { font-size: 20px; }
+    #tabelaVenda tbody tr { padding: 12px 10px; gap: 7px 9px; }
+    #tabelaVenda tbody td { font-size: 12px; }
+    .total-bar .box { font-size: 15px; }
+  }
+
 </style>
 </head>
 <body>
