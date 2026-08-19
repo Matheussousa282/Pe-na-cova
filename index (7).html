@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criar conta · Pé Na Cova</title>
+<title>Entrar · Pé Na Cova</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -16,8 +16,6 @@
     --primary-tint: #e4f2ee;
     --red: #b0362b;
     --red-tint: #fbe9e7;
-    --green-tint: #e2f5ea;
-    --green: #1f8a4c;
     --border: #dde2ea;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; }
@@ -34,9 +32,10 @@
   }
 
   .card {
+    position: relative;
     width: 100%;
     max-width: 380px;
-    background: #fff;
+    background: #ffffff;
     border-radius: 16px;
     padding: 40px 32px 32px;
     box-shadow: 0 24px 60px -20px rgba(0,0,0,.45);
@@ -51,6 +50,7 @@
     font-weight: 800;
     font-size: 20px;
     margin-bottom: 20px;
+    letter-spacing: -0.02em;
   }
 
   h1 { font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; margin-bottom: 4px; }
@@ -84,25 +84,30 @@
     font-size: 14.5px;
     font-weight: 700;
     cursor: pointer;
-    font-family: inherit;
     transition: background .15s, transform .05s;
+    font-family: inherit;
   }
   button.submit:hover { background: var(--primary-hover); }
   button.submit:active { transform: translateY(1px); }
 
-  .msg {
+  .alert {
     margin-top: 14px;
     padding: 10px 12px;
     border-radius: 8px;
+    background: var(--red-tint);
+    color: var(--red);
     font-size: 13.5px;
     font-weight: 600;
     display: none;
     text-align: center;
   }
-  .msg.error { background: var(--red-tint); color: var(--red); }
-  .msg.success { background: var(--green-tint); color: var(--green); }
 
-  .link { margin-top: 22px; text-align: center; font-size: 13.5px; color: var(--muted); }
+  .link {
+    margin-top: 22px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--muted);
+  }
   .link a { color: var(--primary); text-decoration: none; font-weight: 700; }
   .link a:hover { text-decoration: underline; }
 </style>
@@ -111,8 +116,8 @@
 
 <div class="card">
   <div class="brand">PC</div>
-  <h1>Criar conta</h1>
-  <p class="subtitle">Cadastre um novo acesso ao sistema.</p>
+  <h1>Bem-vindo de volta</h1>
+  <p class="subtitle">Entre com sua conta para acessar o painel Pé Na Cova.</p>
 
   <div class="field">
     <label for="usuario">Usuário</label>
@@ -120,63 +125,32 @@
   </div>
   <div class="field">
     <label for="senha">Senha</label>
-    <input type="password" id="senha" autocomplete="new-password">
+    <input type="password" id="senha" autocomplete="current-password">
   </div>
 
-  <button class="submit" onclick="cadastrar()">Cadastrar</button>
-  <div class="msg" id="msgBox"></div>
+  <button class="submit" onclick="login()">Entrar</button>
+  <div class="alert" id="alertMsg">Usuário ou senha incorretos.</div>
 
-  <div class="link">Já tem conta? <a href="index.html">Fazer login</a></div>
+  <div class="link">Ainda não tem conta? <a href="cadastro.html">Criar conta</a></div>
 </div>
 
 <script>
-function mostrarMsg(texto, tipo) {
-  const box = document.getElementById("msgBox");
-  box.textContent = texto;
-  box.className = "msg " + tipo;
-  box.style.display = "block";
-}
+function login() {
+  const user = document.getElementById("usuario").value.trim();
+  const pass = document.getElementById("senha").value.trim();
+  const alertMsg = document.getElementById("alertMsg");
 
-async function cadastrar() {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
-
-  if (!usuario || !senha) {
-    mostrarMsg("Preencha todos os campos.", "error");
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ usuario, senha })
-    });
-
-    let data;
-    try {
-      data = await response.json();
-    } catch {
-      const text = await response.text();
-      console.error("Resposta do servidor não é JSON:", text);
-      mostrarMsg("Erro inesperado do servidor.", "error");
-      return;
-    }
-
-    if (response.ok) {
-      mostrarMsg(data.message || "Conta criada com sucesso!", "success");
-      setTimeout(() => window.location.href = "index.html", 900);
-    } else {
-      mostrarMsg(data.error || "Erro ao cadastrar.", "error");
-    }
-  } catch (err) {
-    console.error("Erro ao cadastrar:", err);
-    mostrarMsg("Erro ao cadastrar usuário.", "error");
+  if (user === "Pe na cova" && pass === "2634") {
+    sessionStorage.setItem("isLoggedIn", "true");
+    alertMsg.style.display = "none";
+    window.location.href = "painel.html";
+  } else {
+    alertMsg.style.display = "block";
   }
 }
 
 document.getElementById("senha").addEventListener("keydown", e => {
-  if (e.key === "Enter") cadastrar();
+  if (e.key === "Enter") login();
 });
 </script>
 

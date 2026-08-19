@@ -3,70 +3,111 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💰 Recebimento</title>
+<title>Recebimento · Pé Na Cova</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-  .container { max-width: 500px; margin:auto; background:#fff; padding:20px; border-radius:10px; box-shadow:0 0 8px rgba(0,0,0,0.1);}
-  h2 { text-align:center; margin-bottom:20px; color:#2f7fb3; }
-  label { display:block; margin:10px 0 5px; font-weight:bold; }
-  select, input { width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-bottom:15px;}
-  .btn { width:100%; padding:10px; background:#007bff; color:#fff; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
-  .btn:hover { background:#0056b3; }
+  :root {
+    --ink: #101826; --ink-soft: #4b5768; --muted: #8a94a3;
+    --paper: #eef1f6; --surface: #ffffff; --border: #dde2ea; --border-soft: #e9ecf2;
+    --primary: #0e6b5c; --primary-hover: #0a5548; --primary-tint: #e4f2ee;
+    --radius: 12px;
+    --shadow: 0 1px 2px rgba(16,24,38,.04), 0 8px 24px -12px rgba(16,24,38,.12);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; background: var(--paper); margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; color: var(--ink); }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+  .card { width: 100%; max-width: 420px; background: var(--surface); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); border: 1px solid var(--border-soft); }
+  .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); background: var(--primary-tint); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px; }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+  h2 { font-size: 20px; font-weight: 800; margin: 0 0 4px; }
+  .subtitle { font-size: 13.5px; color: var(--muted); margin-bottom: 24px; }
+
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .field input, .field select { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; background: var(--surface); }
+  .field input:disabled { background: #f6f8fb; color: var(--ink-soft); }
+  .field select:focus, .field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+
+  .valor-destaque { font-size: 26px; font-weight: 800; color: var(--primary); margin: -4px 0 20px; }
+
+  .btn { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 9px; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: .15s; font-family: inherit; }
+  .btn:hover { background: var(--primary-hover); }
+  .btn:active { transform: translateY(1px); }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 100; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { background: #b0362b; }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h2>💰 Recebimento</h2>
+<div class="card">
+  <div class="eyebrow">Checkout</div>
+  <h2>Finalizar recebimento</h2>
+  <p class="subtitle">Confirme a forma de pagamento para concluir a venda.</p>
 
-  <label>Cliente:</label>
-  <input type="text" id="cliente" disabled>
+  <div class="field">
+    <label>Cliente</label>
+    <input type="text" id="cliente" disabled>
+  </div>
 
-  <label>Valor Total:</label>
-  <input type="text" id="valorTotal" disabled>
+  <div class="valor-destaque" id="valorDestaque">R$ 0,00</div>
 
-  <label for="formaPagamento">Forma de Pagamento:</label>
-  <select id="formaPagamento">
-    <option value="dinheiro">Dinheiro</option>
-    <option value="pix">Pix</option>
-    <option value="debito">Cartão de Débito</option>
-    <option value="credito">Cartão de Crédito</option>
-    <option value="fiado">Consignado</option>
-  </select>
+  <div class="field">
+    <label for="formaPagamento">Forma de pagamento</label>
+    <select id="formaPagamento">
+      <option value="dinheiro">Dinheiro</option>
+      <option value="pix">Pix</option>
+      <option value="debito">Cartão de débito</option>
+      <option value="credito">Cartão de crédito</option>
+      <option value="fiado">Consignado</option>
+    </select>
+  </div>
 
   <button class="btn" onclick="finalizarRecebimento()">Finalizar</button>
 </div>
 
+<div id="toast"></div>
+
 <script>
-    // Verificar se o usuario esta logado
-  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
-    window.location.href = 'index.html'; // Redirecionar para login
-  }
-  
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+  window.location.href = 'index.html';
+}
+
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
 const { jsPDF } = window.jspdf;
 
-// Recupera dados do PDV
 let venda = JSON.parse(localStorage.getItem("vendaAtual"));
 let carrinho = JSON.parse(localStorage.getItem("carrinhoAtual")) || [];
 
 document.getElementById("cliente").value = venda?.cliente || "";
-document.getElementById("valorTotal").value = venda?.total.toFixed(2) || "0.00";
+document.getElementById("valorDestaque").textContent =
+  "R$ " + (venda?.total ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-async function finalizarRecebimento(){
-  if(!venda) { alert("Nenhuma venda em andamento!"); return; }
+async function finalizarRecebimento() {
+  if (!venda) { showToast("Nenhuma venda em andamento.", true); return; }
   const forma = document.getElementById("formaPagamento").value;
 
   try {
-    // Prepara itens para enviar para API
     const itensAPI = carrinho.map(item => ({
-  produto_id: item.produto_id, // usa o id certo do banco
-  quantidade: item.quantidade,
-  preco: item.preco,
-  tamanho: item.tamanho
-}));
+      produto_id: item.produto_id,
+      quantidade: item.quantidade,
+      preco: item.preco,
+      tamanho: item.tamanho
+    }));
 
-    // Chama API para salvar venda
     const res = await fetch("/api/recebimentos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -81,29 +122,25 @@ async function finalizarRecebimento(){
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Erro ao finalizar venda");
 
-    alert("Venda finalizada com sucesso!");
-
-    // Gera PDF da nota e redireciona automaticamente
+    showToast("Venda finalizada com sucesso!");
     gerarPDF();
 
-    // Limpa localStorage
     localStorage.removeItem("vendaAtual");
     localStorage.removeItem("carrinhoAtual");
-
   } catch (err) {
-    alert("Erro: " + err.message);
+    showToast("Erro: " + err.message, true);
   }
 }
 
-function gerarPDF(){
+function gerarPDF() {
   const doc = new jsPDF();
 
   doc.setFontSize(18);
-  doc.setTextColor(47,127,179);
-  doc.text("💰 Nota de Venda", 105, 20, {align: "center"});
+  doc.setTextColor(14, 107, 92);
+  doc.text("Nota de Venda", 105, 20, { align: "center" });
 
   doc.setFontSize(12);
-  doc.setTextColor(0,0,0);
+  doc.setTextColor(0, 0, 0);
   doc.text(`Cliente: ${venda.cliente}`, 20, 35);
   doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 20, 43);
 
@@ -117,23 +154,21 @@ function gerarPDF(){
   doc.setFont(undefined, "normal");
 
   startY += 7;
-  carrinho.forEach(item=>{
+  carrinho.forEach(item => {
     doc.text(item.descricao, 20, startY);
     doc.text(item.tamanho, 70, startY);
     doc.text(item.quantidade.toString(), 100, startY);
-    doc.text("R$ "+item.preco.toFixed(2), 120, startY);
-    doc.text("R$ "+item.subtotal.toFixed(2), 150, startY);
+    doc.text("R$ " + item.preco.toFixed(2), 120, startY);
+    doc.text("R$ " + item.subtotal.toFixed(2), 150, startY);
     startY += 7;
   });
 
   doc.setFont(undefined, "bold");
-  doc.text(`Total: R$ ${venda.total.toFixed(2)}`, 150, startY+10);
+  doc.text(`Total: R$ ${venda.total.toFixed(2)}`, 150, startY + 10);
 
-  // Salva PDF
   doc.save(`nota_${venda.cliente}_${Date.now()}.pdf`);
 
-  // Redireciona automaticamente para PDV
-  window.location.href = "vendas.html";
+  setTimeout(() => window.location.href = "vendas.html", 600);
 }
 </script>
 

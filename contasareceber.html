@@ -1,25 +1,93 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📑 Contas a Receber</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
-    h2 { text-align: center; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    table th, table td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-    table th { background: #007bff; color: #fff; }
-    .btn { padding: 6px 12px; background: #28a745; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; }
-    .btn:hover { background: #218838; }
-    .btn-danger { background: #dc3545; }
-    .btn-danger:hover { background: #b02a37; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contas a Receber · Pé Na Cova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #101826; --ink-soft: #4b5768; --muted: #8a94a3;
+    --paper: #eef1f6; --surface: #ffffff; --border: #dde2ea; --border-soft: #e9ecf2;
+    --primary: #0e6b5c; --primary-hover: #0a5548; --primary-tint: #e4f2ee;
+    --red: #b0362b; --red-tint: #fbe9e7; --amber: #b5750a; --amber-tint: #fdf3e0;
+    --green: #1f8a4c; --green-tint: #e2f5ea;
+    --radius: 12px;
+    --shadow: 0 1px 2px rgba(16,24,38,.04), 0 8px 24px -12px rgba(16,24,38,.12);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; background: var(--paper); margin: 0; padding: 32px 20px 60px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+
+  .page-head { margin-bottom: 26px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); background: var(--primary-tint); padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+  .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .page-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat .label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .stat .value { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; }
+  .stat.warn .value { color: var(--amber); }
+  .stat.ok .value { color: var(--green); }
+
+  .table-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #f7f9fc; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--border-soft); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfd; }
+  td { padding: 12px 16px; font-size: 14px; vertical-align: middle; }
+  td.centered { text-align: center; }
+
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .badge.pago { background: var(--green-tint); color: var(--green); }
+  .badge.pendente { background: var(--amber-tint); color: var(--amber); }
+
+  .actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .action-btn { padding: 7px 12px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: var(--surface); color: var(--ink-soft); transition: .15s; }
+  .action-btn.pay-btn:hover { background: var(--green-tint); color: var(--green); border-color: var(--green); }
+  .action-btn.delete-btn:hover { background: var(--red-tint); color: var(--red); border-color: var(--red); }
+
+  .empty-state, .loading-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 32px; margin-bottom: 10px; opacity: .6; }
+
+  .back { text-align: center; margin-top: 28px; }
+  .back a { color: var(--ink-soft); text-decoration: none; font-size: 13.5px; font-weight: 600; }
+  .back a:hover { color: var(--primary); }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 100; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { background: var(--red); }
+</style>
 </head>
 <body>
-  <div class="container">
-    <h2>📑 Contas a Receber (Consignado)</h2>
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow">Financeiro</div>
+    <h1>Contas a Receber</h1>
+    <p>Acompanhe vendas consignadas e registre os pagamentos.</p>
+  </div>
+
+  <div class="summary">
+    <div class="stat warn">
+      <div class="label">Pendente</div>
+      <div class="value mono" id="statPendente">R$ 0,00</div>
+    </div>
+    <div class="stat ok">
+      <div class="label">Recebido</div>
+      <div class="value mono" id="statPago">R$ 0,00</div>
+    </div>
+    <div class="stat">
+      <div class="label">Contas em aberto</div>
+      <div class="value" id="statQtd">0</div>
+    </div>
+  </div>
+
+  <div class="table-container">
     <table>
       <thead>
         <tr>
@@ -27,87 +95,131 @@
           <th>Data</th>
           <th>Valor</th>
           <th>Status</th>
-          <th>Ações</th>
+          <th style="text-align:center;">Ações</th>
         </tr>
       </thead>
-      <tbody id="tabelaFiados">
-        <tr><td colspan="5">Carregando...</td></tr>
-      </tbody>
+      <tbody id="tabelaFiados"></tbody>
     </table>
+    <div class="loading-state" id="loadingState">Carregando...</div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="icon">✅</div>
+      <div>Nenhum fiado pendente.</div>
+    </div>
   </div>
 
-  <script>
-      // Verificar se o usuario esta logado
-  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
-    window.location.href = 'index.html'; // Redirecionar para login
-  }
-  
-    const API_BASE = "/api"; // Ajuste se necessário
+  <div class="back"><a href="painel.html">← Voltar ao painel</a></div>
+</div>
 
-    async function carregarFiados() {
-      const tabela = document.getElementById("tabelaFiados");
-      try {
-        const res = await fetch(`${API_BASE}/contasareceber`);
-        if (!res.ok) throw new Error("Erro ao buscar contas a receber");
-        const fiados = await res.json();
+<div id="toast"></div>
 
-        if (fiados.length === 0) {
-          tabela.innerHTML = `<tr><td colspan="5">Nenhum fiado pendente</td></tr>`;
-          return;
-        }
+<script>
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+  window.location.href = 'index.html';
+}
 
-        tabela.innerHTML = "";
-        fiados.forEach((fiado) => {
-          const row = document.createElement("tr");
+const API_BASE = "/api";
+const tabela = document.getElementById("tabelaFiados");
+const loadingState = document.getElementById("loadingState");
+const emptyState = document.getElementById("emptyState");
 
-          row.innerHTML = `
-            <td>${fiado.cliente}</td>
-            <td>${fiado.data}</td>
-            <td>R$ ${parseFloat(fiado.valor).toFixed(2)}</td>
-            <td>${fiado.status}</td>
-            <td>
-              ${fiado.status !== "Pago" ? `<button class="btn" onclick="marcarPago(${fiado.id})">Marcar Pago</button>` : ""}
-              <button class="btn btn-danger" onclick="remover(${fiado.id})">Remover</button>
-            </td>
-          `;
-          tabela.appendChild(row);
-        });
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
 
-      } catch (err) {
-        tabela.innerHTML = `<tr><td colspan="5">Erro ao carregar contas: ${err.message}</td></tr>`;
-      }
-    }
+function atualizarResumo(fiados) {
+  const pendentes = fiados.filter(f => f.status !== "Pago");
+  const pagos = fiados.filter(f => f.status === "Pago");
+  const totalPendente = pendentes.reduce((s, f) => s + parseFloat(f.valor), 0);
+  const totalPago = pagos.reduce((s, f) => s + parseFloat(f.valor), 0);
 
-    async function marcarPago(id) {
-      try {
-        const res = await fetch(`${API_BASE}/contasareceber`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, status: "Pago" })
-        });
-        if (!res.ok) throw new Error("Erro ao atualizar status");
-        carregarFiados();
-      } catch (err) {
-        alert(err.message);
-      }
-    }
+  document.getElementById("statPendente").textContent = totalPendente.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById("statPago").textContent = totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  document.getElementById("statQtd").textContent = pendentes.length;
+}
 
-    async function remover(id) {
-  if (!confirm("Deseja realmente remover esta conta?")) return;
+async function carregarFiados() {
+  loadingState.style.display = "block";
+  emptyState.style.display = "none";
+  tabela.innerHTML = "";
 
   try {
-    const res = await fetch(`${API_BASE}/contasareceber?id=${id}`, {
-      method: "DELETE"
-    });
+    const res = await fetch(`${API_BASE}/contasareceber`);
+    if (!res.ok) throw new Error("Erro ao buscar contas a receber");
+    const fiados = await res.json();
 
-    if (!res.ok) throw new Error("Erro ao remover conta");
-    carregarFiados();
+    loadingState.style.display = "none";
+    atualizarResumo(fiados);
+
+    if (fiados.length === 0) {
+      emptyState.style.display = "block";
+      return;
+    }
+
+    fiados.forEach((fiado) => {
+      const pago = fiado.status === "Pago";
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${fiado.cliente}</td>
+        <td class="mono">${fiado.data}</td>
+        <td class="mono">R$ ${parseFloat(fiado.valor).toFixed(2)}</td>
+        <td><span class="badge ${pago ? 'pago' : 'pendente'}">${fiado.status}</span></td>
+        <td>
+          <div class="actions">
+            ${!pago ? `<button class="action-btn pay-btn" data-action="pagar" data-id="${fiado.id}">Marcar pago</button>` : ""}
+            <button class="action-btn delete-btn" data-action="remover" data-id="${fiado.id}">Remover</button>
+          </div>
+        </td>
+      `;
+      tabela.appendChild(row);
+    });
   } catch (err) {
-    alert(err.message);
+    loadingState.style.display = "none";
+    showToast(err.message, true);
   }
 }
 
+async function marcarPago(id) {
+  try {
+    const res = await fetch(`${API_BASE}/contasareceber`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "Pago" })
+    });
+    if (!res.ok) throw new Error("Erro ao atualizar status");
+    showToast("Conta marcada como paga");
     carregarFiados();
-  </script>
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+async function remover(id) {
+  if (!confirm("Deseja realmente remover esta conta?")) return;
+  try {
+    const res = await fetch(`${API_BASE}/contasareceber?id=${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error("Erro ao remover conta");
+    showToast("Conta removida");
+    carregarFiados();
+  } catch (err) {
+    showToast(err.message, true);
+  }
+}
+
+tabela.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = Number(btn.dataset.id);
+  if (btn.dataset.action === 'pagar') marcarPago(id);
+  if (btn.dataset.action === 'remover') remover(id);
+});
+
+carregarFiados();
+</script>
 </body>
 </html>

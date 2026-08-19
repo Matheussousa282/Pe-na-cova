@@ -1,77 +1,140 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>👤 Controle de Clientes</title>
-  <style>
-    :root {
-      --primary: #2f7fb3;
-      --primary-hover: #25658d;
-      --danger: #dc2626;
-      --danger-hover: #b02a37;
-      --background: #f4f7fb;
-      --card-bg: #ffffff;
-      --text-dark: #333;
-      --text-light: #555;
-      --border-color: #ddd;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clientes · Pé Na Cova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #101826; --ink-soft: #4b5768; --muted: #8a94a3;
+    --paper: #eef1f6; --surface: #ffffff; --border: #dde2ea; --border-soft: #e9ecf2;
+    --primary: #0e6b5c; --primary-hover: #0a5548; --primary-tint: #e4f2ee;
+    --red: #b0362b; --red-tint: #fbe9e7; --amber: #b5750a; --amber-tint: #fdf3e0;
+    --radius: 12px;
+    --shadow: 0 1px 2px rgba(16,24,38,.04), 0 8px 24px -12px rgba(16,24,38,.12);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; background: var(--paper); margin: 0; padding: 32px 20px 60px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
 
-    body { font-family: "Segoe UI", Arial, sans-serif; background: var(--background); margin: 0; padding: 20px; color: var(--text-dark); }
-    h1 { text-align: center; color: var(--primary); margin-bottom: 20px; font-size: 28px; }
-    .cliente-container { background: var(--card-bg); padding: 25px; border-radius: 14px; box-shadow: 0px 6px 18px rgba(0,0,0,0.08); max-width: 1000px; margin: 0 auto; overflow-x: auto; }
-    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
-    label { font-weight: bold; font-size: 14px; color: var(--text-dark); margin-bottom: 6px; display: inline-block; }
-    input, textarea { padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; width: 100%; transition: 0.2s; }
-    input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 5px rgba(47, 127, 179, 0.3); }
-    textarea { resize: vertical; min-height: 60px; }
-    button { grid-column: 1 / -1; padding: 14px; background: var(--primary); color: white; font-size: 16px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; transition: 0.3s; }
-    button:hover { background: var(--primary-hover); }
-    .filtro { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-    .filtro input { flex: 1; min-width: 200px; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; }
-    table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; cursor: default; }
-    th, td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); text-align: left; }
-    th { background: var(--primary); color: white; font-size: 15px; font-weight: 600; cursor: pointer; user-select: none; }
-    tr:nth-child(even) { background: #f9fcff; }
-    tr:hover { background: #e9f3fa; }
-    td { font-size: 14px; color: var(--text-light); }
-    .action-btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 5px; color: white; transition: 0.2s; }
-    .edit-btn { background: var(--primary); }
-    .edit-btn:hover { background: var(--primary-hover); }
-    .delete-btn { background: var(--danger); }
-    .delete-btn:hover { background: var(--danger-hover); }
-    .back { text-align: center; margin-top: 25px; }
-    .back a { color: var(--primary); text-decoration: none; font-size: 15px; font-weight: bold; }
-    .back a:hover { text-decoration: underline; }
-  </style>
+  .page-head { margin-bottom: 26px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); background: var(--primary-tint); padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+  .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .page-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .stat { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat .label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 8px; }
+  .stat .value { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; color: var(--primary); }
+
+  .panel { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; user-select: none; }
+  .panel-head h2 { font-size: 15px; margin: 0; font-weight: 700; }
+  .toggle-icon { color: var(--muted); font-size: 13px; transition: transform .2s; }
+  .panel.collapsed .toggle-icon { transform: rotate(-90deg); }
+  .panel.collapsed .panel-body { display: none; }
+
+  form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 4px 20px 20px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); }
+  input, textarea { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; width: 100%; background: var(--surface); transition: .15s; }
+  textarea { resize: vertical; min-height: 44px; }
+  input:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px var(--primary-tint); }
+
+  .form-actions { grid-column: 1 / -1; display: flex; gap: 10px; align-items: center; }
+  button { font-family: inherit; cursor: pointer; }
+  .btn { padding: 11px 18px; background: var(--primary); color: white; font-size: 14px; font-weight: 600; border: none; border-radius: 8px; transition: .15s; }
+  .btn:hover { background: var(--primary-hover); }
+  .btn.secondary { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
+  .btn.secondary:hover { background: var(--border-soft); }
+  #editingBadge { font-size: 12.5px; font-weight: 600; color: var(--amber); background: var(--amber-tint); padding: 6px 10px; border-radius: 6px; display: none; }
+
+  .toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .search-field { position: relative; flex: 1; min-width: 240px; }
+  .search-field input { width: 100%; padding-left: 34px; }
+  .search-field::before { content: ""; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; border: 2px solid var(--muted); border-radius: 50%; }
+  .search-field::after { content: ""; position: absolute; left: 21px; top: 62%; width: 6px; height: 2px; background: var(--muted); transform: rotate(45deg); }
+
+  .table-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #f7f9fc; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; white-space: nowrap; }
+  thead th:hover { color: var(--ink); }
+  thead th.sort-asc::after { content: " ▲"; font-size: 9px; color: var(--primary); }
+  thead th.sort-desc::after { content: " ▼"; font-size: 9px; color: var(--primary); }
+  tbody tr { border-bottom: 1px solid var(--border-soft); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfd; }
+  td { padding: 12px 16px; font-size: 14px; color: var(--ink); vertical-align: middle; }
+  td.muted { color: var(--muted); }
+  .actions { display: flex; gap: 6px; white-space: nowrap; }
+  .action-btn { padding: 7px 12px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: var(--surface); color: var(--ink-soft); transition: .15s; }
+  .action-btn.edit-btn:hover { background: var(--primary-tint); color: var(--primary); border-color: var(--primary); }
+  .action-btn.delete-btn:hover { background: var(--red-tint); color: var(--red); border-color: var(--red); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state .icon { font-size: 32px; margin-bottom: 10px; opacity: .6; }
+
+  .back { text-align: center; margin-top: 28px; }
+  .back a { color: var(--ink-soft); text-decoration: none; font-size: 13.5px; font-weight: 600; }
+  .back a:hover { color: var(--primary); }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 100; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { background: var(--red); }
+
+  @media (max-width: 640px) {
+    thead th:nth-child(3), td:nth-child(3) { display: none; }
+    thead th:nth-child(4), td:nth-child(4) { display: none; }
+  }
+</style>
 </head>
 <body>
-  <h1>👤 Controle de Clientes</h1>
-  <div class="cliente-container">
-    <form id="formCliente">
-      <div>
-        <label for="nome">Nome</label>
-        <input type="text" id="nome" required>
-      </div>
-      <div>
-        <label for="telefone">Telefone</label>
-        <input type="text" id="telefone" required>
-      </div>
-      <div>
-        <label for="endereco">Endereço</label>
-        <input type="text" id="endereco" required>
-      </div>
-      <div>
-        <label for="observacoes">Observações</label>
-        <textarea id="observacoes"></textarea>
-      </div>
-      <button type="submit">Cadastrar / Atualizar Cliente</button>
-    </form>
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow">Clientes</div>
+    <h1>Controle de Clientes</h1>
+    <p>Cadastre e gerencie os clientes da sua loja.</p>
+  </div>
 
-    <div class="filtro">
-      <input type="text" id="buscarCliente" placeholder="🔍 Buscar por nome...">
+  <div class="summary">
+    <div class="stat">
+      <div class="label">Clientes cadastrados</div>
+      <div class="value" id="statTotal">0</div>
     </div>
+  </div>
 
+  <div class="panel collapsed" id="formPanel">
+    <div class="panel-head" id="formPanelHead">
+      <h2>Cadastrar novo cliente</h2>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="panel-body">
+      <form id="formCliente">
+        <div class="field"><label for="nome">Nome</label><input type="text" id="nome" required></div>
+        <div class="field"><label for="telefone">Telefone</label><input type="text" id="telefone" required></div>
+        <div class="field full"><label for="endereco">Endereço</label><input type="text" id="endereco" required></div>
+        <div class="field full"><label for="observacoes">Observações</label><textarea id="observacoes"></textarea></div>
+        <div class="form-actions">
+          <button type="submit" class="btn" id="submitBtn">Cadastrar cliente</button>
+          <button type="button" class="btn secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
+          <span id="editingBadge">Editando cliente</span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-field">
+      <input type="text" id="buscarCliente" placeholder="Buscar por nome...">
+    </div>
+  </div>
+
+  <div class="table-container">
     <table id="tabelaClientes">
       <thead>
         <tr>
@@ -84,45 +147,66 @@
       </thead>
       <tbody></tbody>
     </table>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="icon">🗂️</div>
+      <div>Nenhum cliente encontrado.</div>
+    </div>
   </div>
 
-  <div class="back">
-    <a href="painel.html">⬅ Voltar ao Painel</a>
-  </div>
+  <div class="back"><a href="painel.html">← Voltar ao painel</a></div>
+</div>
 
-  <script>
-      // Verificar se o usuario esta logado
-  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
-    window.location.href = 'index.html'; // Redirecionar para login
+<div id="toast"></div>
+
+<script>
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+  window.location.href = 'index.html';
+}
+
+const form = document.getElementById("formCliente");
+const tabela = document.querySelector("#tabelaClientes tbody");
+const emptyState = document.getElementById("emptyState");
+const buscarCliente = document.getElementById("buscarCliente");
+const thElements = document.querySelectorAll("#tabelaClientes th[data-key]");
+const submitBtn = document.getElementById("submitBtn");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
+const editingBadge = document.getElementById("editingBadge");
+const formPanel = document.getElementById("formPanel");
+const formPanelHead = document.getElementById("formPanelHead");
+
+let clientes = [];
+let editId = null; // CORRIGIDO: antes era editIndex (guardava a posição na lista filtrada)
+let sortConfig = { key: null, direction: 'asc' };
+
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
+
+formPanelHead.addEventListener('click', () => formPanel.classList.toggle('collapsed'));
+
+async function fetchClientes() {
+  try {
+    const res = await fetch("/api/clientes");
+    if (!res.ok) throw new Error("Erro ao buscar clientes");
+    clientes = await res.json();
+    renderTabela();
+  } catch (err) {
+    console.error(err);
+    showToast("Erro ao buscar clientes: " + err.message, true);
   }
-    const form = document.getElementById("formCliente");
-    const tabela = document.querySelector("#tabelaClientes tbody");
-    const buscarCliente = document.getElementById("buscarCliente");
-    const thElements = document.querySelectorAll("#tabelaClientes th[data-key]");
+}
 
-    let clientes = [];
-    let editIndex = null;
-    let sortConfig = { key: null, direction: 'asc' };
-
-    // ------------------ FUNÇÕES API ------------------
-    async function fetchClientes() {
-      try {
-        const res = await fetch("/api/clientes");
-        if (!res.ok) throw new Error("Erro ao buscar clientes");
-        clientes = await res.json();
-        renderTabela();
-      } catch (err) {
-        console.error(err);
-        alert("Erro ao buscar clientes: " + err.message);
-      }
-    }
-
-    async function salvarCliente(cliente) {
+async function salvarCliente(cliente) {
   try {
     let res;
-    if (editIndex !== null) {
-      const id = clientes[editIndex].id;
-      res = await fetch(`/api/clientes?id=${id}`, {
+    if (editId !== null) {
+      res = await fetch(`/api/clientes?id=${editId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cliente)
@@ -141,124 +225,149 @@
     }
 
     const data = await res.json();
-    if (editIndex !== null) {
-      clientes[editIndex] = data;
-      editIndex = null;
+    if (editId !== null) {
+      const idx = clientes.findIndex(c => c.id === editId);
+      if (idx !== -1) clientes[idx] = data;
+      showToast("Cliente atualizado com sucesso");
+      sairModoEdicao();
     } else {
       clientes.unshift(data);
+      showToast("Cliente cadastrado com sucesso");
     }
 
     renderTabela();
     form.reset();
   } catch (err) {
-    alert("Erro ao salvar cliente: " + err.message);
+    showToast("Erro ao salvar cliente: " + err.message, true);
   }
 }
 
-    // ------------------ RENDER TABELA ------------------
-    function renderTabela() {
-      tabela.innerHTML = "";
-      const busca = buscarCliente.value.toLowerCase();
-      let clientesFiltrados = clientes.filter(c => c.nome.toLowerCase().includes(busca));
+function renderTabela() {
+  tabela.innerHTML = "";
+  const busca = buscarCliente.value.toLowerCase();
+  let clientesFiltrados = clientes.filter(c => c.nome.toLowerCase().includes(busca));
 
-      if (sortConfig.key) {
-        clientesFiltrados.sort((a,b) => {
-          let valA = a[sortConfig.key]?.toString().toLowerCase();
-          let valB = b[sortConfig.key]?.toString().toLowerCase();
-          if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
-          if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
-          return 0;
-        });
-      }
-
-      clientesFiltrados.forEach((cliente, index) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${cliente.nome}</td>
-          <td>${cliente.telefone}</td>
-          <td>${cliente.endereco}</td>
-          <td>${cliente.observacoes || ""}</td>
-          <td>
-            <button class="action-btn edit-btn" onclick="editarCliente(${index})">Editar</button>
-            <button class="action-btn delete-btn" onclick="excluirCliente(${cliente.id})">Excluir</button>
-          </td>
-        `;
-        tabela.appendChild(tr);
-      });
-      atualizarSetas();
-    }
-
-    function atualizarSetas() {
-      thElements.forEach(th => {
-        th.classList.remove('sort-asc','sort-desc');
-        if(sortConfig.key === th.dataset.key){
-          th.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
-        }
-      });
-    }
-
-    // ------------------ EVENTOS ------------------
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const cliente = {
-        nome: document.getElementById("nome").value,
-        telefone: document.getElementById("telefone").value,
-        endereco: document.getElementById("endereco").value,
-        observacoes: document.getElementById("observacoes").value,
-      };
-      salvarCliente(cliente);
+  if (sortConfig.key) {
+    clientesFiltrados.sort((a, b) => {
+      let valA = a[sortConfig.key]?.toString().toLowerCase() || '';
+      let valB = b[sortConfig.key]?.toString().toLowerCase() || '';
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
     });
+  }
 
-    function editarCliente(index){
-      const cliente = clientes[index];
-      document.getElementById("nome").value = cliente.nome;
-      document.getElementById("telefone").value = cliente.telefone;
-      document.getElementById("endereco").value = cliente.endereco;
-      document.getElementById("observacoes").value = cliente.observacoes || "";
-      editIndex = index;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  emptyState.style.display = clientesFiltrados.length === 0 ? 'block' : 'none';
+
+  clientesFiltrados.forEach(cliente => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${cliente.nome}</td>
+      <td class="mono">${cliente.telefone}</td>
+      <td class="muted">${cliente.endereco}</td>
+      <td class="muted">${cliente.observacoes || ""}</td>
+      <td>
+        <div class="actions">
+          <button type="button" class="action-btn edit-btn" data-id="${cliente.id}">Editar</button>
+          <button type="button" class="action-btn delete-btn" data-id="${cliente.id}">Excluir</button>
+        </div>
+      </td>
+    `;
+    tabela.appendChild(tr);
+  });
+
+  document.getElementById('statTotal').textContent = clientes.length;
+  atualizarSetas();
+}
+
+function atualizarSetas() {
+  thElements.forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+    if (sortConfig.key === th.dataset.key) {
+      th.classList.add(sortConfig.direction === 'asc' ? 'sort-asc' : 'sort-desc');
     }
+  });
+}
 
-    async function excluirCliente(id){
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const cliente = {
+    nome: document.getElementById("nome").value.trim(),
+    telefone: document.getElementById("telefone").value.trim(),
+    endereco: document.getElementById("endereco").value.trim(),
+    observacoes: document.getElementById("observacoes").value.trim(),
+  };
+  salvarCliente(cliente);
+});
+
+// CORRIGIDO: busca o cliente pelo id (único), não pela posição na lista já filtrada/ordenada
+function editarCliente(id) {
+  const cliente = clientes.find(c => c.id === id);
+  if (!cliente) {
+    showToast("Cliente não encontrado", true);
+    return;
+  }
+  document.getElementById("nome").value = cliente.nome;
+  document.getElementById("telefone").value = cliente.telefone;
+  document.getElementById("endereco").value = cliente.endereco;
+  document.getElementById("observacoes").value = cliente.observacoes || "";
+
+  editId = cliente.id;
+  submitBtn.textContent = "Salvar alterações";
+  cancelEditBtn.style.display = "inline-block";
+  editingBadge.style.display = "inline-block";
+
+  formPanel.classList.remove('collapsed');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function sairModoEdicao() {
+  editId = null;
+  form.reset();
+  submitBtn.textContent = "Cadastrar cliente";
+  cancelEditBtn.style.display = "none";
+  editingBadge.style.display = "none";
+}
+
+cancelEditBtn.addEventListener('click', sairModoEdicao);
+
+async function excluirCliente(id) {
   if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
 
-  console.log("Excluindo cliente com ID:", id);
-
   try {
-    const res = await fetch(`/api/clientes?id=${id}`, {
-      method: "DELETE"
-    });
-
+    const res = await fetch(`/api/clientes?id=${id}`, { method: "DELETE" });
     if (!res.ok) {
       const errorData = await res.json();
       throw new Error(errorData.error || "Erro ao excluir cliente");
     }
-
-    // remove da lista local
     clientes = clientes.filter(c => c.id !== id);
+    if (editId === id) sairModoEdicao();
     renderTabela();
-
-    alert("Cliente excluído com sucesso!");
+    showToast("Cliente excluído com sucesso");
   } catch (err) {
-    alert("Erro ao excluir cliente: " + err.message);
+    showToast("Erro ao excluir cliente: " + err.message, true);
   }
 }
-    buscarCliente.addEventListener("input", renderTabela);
-    thElements.forEach(th => {
-      th.addEventListener("click", () => {
-        const key = th.dataset.key;
-        if(sortConfig.key === key){
-          sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-        } else {
-          sortConfig.key = key;
-          sortConfig.direction = 'asc';
-        }
-        renderTabela();
-      });
-    });
 
-    // ------------------ INICIAL ------------------
-    fetchClientes();
-  </script>
+tabela.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = Number(btn.dataset.id);
+  if (btn.classList.contains('edit-btn')) editarCliente(id);
+  if (btn.classList.contains('delete-btn')) excluirCliente(id);
+});
+
+buscarCliente.addEventListener("input", renderTabela);
+thElements.forEach(th => {
+  th.addEventListener("click", () => {
+    const key = th.dataset.key;
+    if (sortConfig.key === key) sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    else { sortConfig.key = key; sortConfig.direction = 'asc'; }
+    renderTabela();
+  });
+});
+
+fetchClientes();
+</script>
 </body>
 </html>

@@ -3,126 +3,160 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📊 Controle de Vendas</title>
+<title>Controle de Vendas · Pé Na Cova</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --primary: #2f7fb3;
-  --primary-hover: #25658d;
-  --danger: #dc2626;
-  --background: #f4f7fb;
-  --card-bg: #fff;
-  --text-dark: #333;
-  --border-color: #ddd;
-}
-body { font-family: "Segoe UI", Arial, sans-serif; background: var(--background); margin: 0; padding: 20px; color: var(--text-dark); }
-h1 { text-align: center; color: var(--primary); margin-bottom: 25px; }
-.container { max-width: 1200px; margin: 0 auto; background: var(--card-bg); padding: 25px; border-radius: 14px; box-shadow: 0px 6px 18px rgba(0,0,0,0.08); }
-.filters { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
-.filters input, .filters select { padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; }
-button { padding: 10px 18px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-button:hover { background: var(--primary-hover); }
-table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
-th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); text-align: left; }
-th { background: var(--primary); color: white; }
-tr:nth-child(even) { background: #f9fcff; }
-tr:hover { background: #e9f3fa; }
-.action-btn { padding: 6px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; color: white; transition: 0.2s; }
-.remove-btn { background: var(--danger); } .remove-btn:hover { background: #b02a37; }
-.total { text-align: right; font-weight: bold; margin-top: 10px; }
-.back { text-align: center; margin-top: 20px; }
-.back a { color: var(--primary); text-decoration: none; font-size: 15px; font-weight: bold; }
-.back a:hover { text-decoration: underline; }
+  :root {
+    --ink: #101826; --ink-soft: #4b5768; --muted: #8a94a3;
+    --paper: #eef1f6; --surface: #ffffff; --border: #dde2ea; --border-soft: #e9ecf2;
+    --primary: #0e6b5c; --primary-hover: #0a5548; --primary-tint: #e4f2ee;
+    --red: #b0362b; --red-tint: #fbe9e7; --amber: #b5750a; --amber-tint: #fdf3e0;
+    --radius: 12px;
+    --shadow: 0 1px 2px rgba(16,24,38,.04), 0 8px 24px -12px rgba(16,24,38,.12);
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; background: var(--paper); margin: 0; padding: 32px 20px 60px; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
 
-.troca-btn {
-  background: #f59e0b;
-}
-.troca-btn:hover {
-  background: #d97706;
-}
+  .page-head { margin-bottom: 22px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary); background: var(--primary-tint); padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+  .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+  .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 4px; }
+  .page-head p { margin: 0; color: var(--muted); font-size: 14px; }
 
+  .filters { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+  .filters input { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; }
+  .filters input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+  button { font-family: inherit; cursor: pointer; }
+  .btn { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 13.5px; transition: .15s; }
+  .btn:hover { background: var(--primary-hover); }
+  .btn.secondary { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
+  .btn.secondary:hover { background: var(--border-soft); }
+
+  .table-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #f7f9fc; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border-soft); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfd; }
+  tbody tr.resumo-row { background: var(--primary-tint) !important; font-weight: 700; }
+  td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
+  td.mono { font-family: "JetBrains Mono", monospace; }
+
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .action-btn { padding: 7px 11px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12px; font-weight: 600; background: var(--surface); color: var(--ink-soft); transition: .15s; }
+  .action-btn.troca-btn:hover { background: var(--amber-tint); color: var(--amber); border-color: var(--amber); }
+  .action-btn.remove-btn:hover { background: var(--red-tint); color: var(--red); border-color: var(--red); }
+
+  .total-bar { display: flex; justify-content: flex-end; margin-top: 14px; }
+  .total-bar .box { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 10px; padding: 12px 18px; font-weight: 700; font-size: 15px; box-shadow: var(--shadow); }
+  .total-bar .box span { color: var(--primary); }
+
+  .back { text-align: center; margin-top: 28px; }
+  .back a { color: var(--ink-soft); text-decoration: none; font-size: 13.5px; font-weight: 600; }
+  .back a:hover { color: var(--primary); }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(16,24,38,.5); align-items: center; justify-content: center; z-index: 200; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--surface); padding: 24px; border-radius: 14px; width: 420px; max-width: 92%; box-shadow: 0 24px 60px -20px rgba(0,0,0,.4); }
+  .modal h3 { font-size: 16px; font-weight: 700; margin: 0 0 16px; }
+  .modal label { font-size: 12.5px; font-weight: 600; color: var(--ink-soft); display: block; margin-bottom: 6px; }
+  .modal select, .modal input { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; font-family: inherit; margin-bottom: 14px; }
+  .modal select:focus, .modal input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 300; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.error { background: var(--red); }
 </style>
 </head>
 <body>
-<h1>📊 Controle de Vendas</h1>
-
-<div class="container">
+<div class="wrap">
+  <div class="page-head">
+    <div class="eyebrow">Vendas</div>
+    <h1>Controle de Vendas</h1>
+    <p>Histórico de vendas, trocas e cancelamentos.</p>
+  </div>
 
   <div class="filters">
     <input type="date" id="filtroData">
     <input type="text" id="filtroCliente" placeholder="Filtrar por cliente">
     <input type="text" id="filtroProduto" placeholder="Filtrar por produto">
-    <button id="btnFiltrar">Filtrar</button>
-    <button id="btnLimpar">Limpar</button>
+    <button class="btn" id="btnFiltrar">Filtrar</button>
+    <button class="btn secondary" id="btnLimpar">Limpar</button>
   </div>
 
-  <table id="tabelaVendas">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Cliente</th>
-        <th>Produtos</th>
-        <th>Total</th>
-        <th>Desconto</th>
-        <th>Total Final</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-container">
+    <table id="tabelaVendas">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Cliente</th>
+          <th>Produtos</th>
+          <th>Total</th>
+          <th>Desconto</th>
+          <th>Total final</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
-  <div class="total">Total Geral: R$ <span id="totalGeral">0.00</span></div>
+  <div class="total-bar"><div class="box">Total geral: <span class="mono" id="totalGeral">R$ 0.00</span></div></div>
 
+  <div class="back"><a href="painel.html">← Voltar ao painel</a></div>
 </div>
 
-<div class="back"><a href="painel.html">⬅ Voltar ao Painel</a></div>
-
-<div id="modalTroca" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
-  <div style="background:#fff; padding:20px; border-radius:12px; width:400px;">
-    <h3>🔄 Trocar Itens da Venda</h3>
-
+<div class="modal-overlay" id="modalTroca">
+  <div class="modal">
+    <h3>Trocar itens da venda</h3>
     <label>Produto</label>
-<select id="produtoSelect" style="width:100%; padding:8px; margin-bottom:10px;"></select>
-
-<label>Quantidade</label>
-<input type="number" id="novaQtd" min="1" style="width:100%; padding:8px; margin-bottom:10px;">
-
-<label>Valor</label>
-<input type="number" id="novoValor" step="0.01" style="width:100%; padding:8px; margin-bottom:10px;">
-
-
-    <div style="display:flex; gap:10px; justify-content:flex-end;">
-      <button onclick="fecharTroca()">Cancelar</button>
-      <button class="troca-btn" onclick="confirmarTroca()">Confirmar</button>
+    <select id="produtoSelect"></select>
+    <label>Quantidade</label>
+    <input type="number" id="novaQtd" min="1">
+    <label>Valor</label>
+    <input type="number" id="novoValor" step="0.01">
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="fecharTroca()">Cancelar</button>
+      <button class="btn" onclick="confirmarTroca()">Confirmar</button>
     </div>
   </div>
 </div>
 
+<div id="toast"></div>
 
 <script>
-    // Verificar se o usuario esta logado
-  if (sessionStorage.getItem('isLoggedIn') !== 'true'){
-    window.location.href = 'index.html'; // Redirecionar para login
-  }
+if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+  window.location.href = 'index.html';
+}
+
+let toastTimer = null;
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+}
 
 let vendas = [];
+let vendaTrocaId = null;
+let itensVendaAtual = [];
 
 async function confirmarTroca() {
   const index = document.getElementById("produtoSelect").value;
-
-  if (index === "") {
-    alert("Selecione um produto");
-    return;
-  }
+  if (index === "") { showToast("Selecione um produto", true); return; }
 
   const itemOriginal = itensVendaAtual[index];
-
   const quantidade = Number(document.getElementById("novaQtd").value);
   const preco = Number(document.getElementById("novoValor").value);
 
-  if (!quantidade || !preco) {
-    alert("Preencha quantidade e valor");
-    return;
-  }
+  if (!quantidade || !preco) { showToast("Preencha quantidade e valor", true); return; }
 
   try {
     const res = await fetch("/api/trocarItensVenda", {
@@ -130,43 +164,31 @@ async function confirmarTroca() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         venda_id: vendaTrocaId,
-        itens: [
-          {
-            produto_id: itemOriginal.produto_id,
-            tamanho: itemOriginal.tamanho,
-            quantidade,
-            preco
-          }
-        ]
+        itens: [{ produto_id: itemOriginal.produto_id, tamanho: itemOriginal.tamanho, quantidade, preco }]
       })
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Erro na troca");
-
-    alert("Itens trocados com sucesso!");
+    showToast("Itens trocados com sucesso");
     fecharTroca();
     buscarVendas();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, true);
   }
 }
 
-
-// --- Buscar vendas do banco via API ---
 async function buscarVendas() {
   try {
-    const res = await fetch("/api/relatorio"); // Busca todas as vendas
+    const res = await fetch("/api/relatorio");
     if (!res.ok) throw new Error("Erro ao buscar vendas do servidor");
     vendas = await res.json();
     renderTabela(vendas);
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, true);
   }
 }
 
-// --- Renderizar tabela ---
-function renderTabela(lista){
+function renderTabela(lista) {
   const tbody = document.getElementById("tabelaVendas").querySelector("tbody");
   tbody.innerHTML = "";
 
@@ -174,82 +196,76 @@ function renderTabela(lista){
   const clientesTotais = {};
 
   lista.forEach(venda => {
-    const total = parseFloat(venda.total) || 0;          // Total bruto da venda
-    const desconto = parseFloat(venda.desconto) || 0;    // Valor do desconto aplicado
-    const totalFinal = total - desconto;                 // Total final da venda
+    const total = parseFloat(venda.total) || 0;
+    const desconto = parseFloat(venda.desconto) || 0;
+    const totalFinal = total - desconto;
     totalGeral += totalFinal;
 
-    // Somar por cliente
-    if(!clientesTotais[venda.cliente]){
-      clientesTotais[venda.cliente] = { total: 0, desconto: 0 };
-    }
+    if (!clientesTotais[venda.cliente]) clientesTotais[venda.cliente] = { total: 0, desconto: 0 };
     clientesTotais[venda.cliente].total += totalFinal;
     clientesTotais[venda.cliente].desconto += desconto;
 
-    // Montar string de produtos
-    const produtosStr = (venda.produtos || [])
-      .map(p => `${p.descricao} (${p.tamanho}) x${p.quantidade}`)
-      .join(", ");
+    const produtosStr = (venda.produtos || []).map(p => `${p.descricao} (${p.tamanho}) x${p.quantidade}`).join(", ");
 
-    // Criar linha da venda
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${venda.data}</td>
+      <td class="mono">${venda.data}</td>
       <td>${venda.cliente}</td>
       <td>${produtosStr}</td>
-      <td>R$ ${total.toFixed(2)}</td>
-      <td>R$ ${desconto.toFixed(2)}</td>
-      <td>R$ ${totalFinal.toFixed(2)}</td>
+      <td class="mono">R$ ${total.toFixed(2)}</td>
+      <td class="mono">R$ ${desconto.toFixed(2)}</td>
+      <td class="mono">R$ ${totalFinal.toFixed(2)}</td>
       <td>
-        <button class="action-btn troca-btn" onclick='abrirTroca(${JSON.stringify(venda)})'>Trocar Itens</button>
-        <button class="action-btn remove-btn" onclick="cancelarVenda(${venda.venda_id})">Cancelar</button>
+        <div class="actions">
+          <button class="action-btn troca-btn" data-action="trocar">Trocar itens</button>
+          <button class="action-btn remove-btn" data-action="cancelar" data-id="${venda.venda_id}">Cancelar</button>
+        </div>
       </td>
     `;
+    tr.querySelector('[data-action="trocar"]').addEventListener('click', () => abrirTroca(venda));
     tbody.appendChild(tr);
   });
 
-  // --- Resumo por cliente ---
-  if(Object.keys(clientesTotais).length > 0){
+  if (Object.keys(clientesTotais).length > 0) {
     const resumoHeader = document.createElement("tr");
-    resumoHeader.innerHTML = `<td colspan="7" style="background:#dbe9f7;font-weight:bold;text-align:center;">Resumo por Cliente</td>`;
+    resumoHeader.innerHTML = `<td colspan="7" style="background:#f7f9fc;font-weight:700;text-align:center;color:var(--ink-soft);">Resumo por cliente</td>`;
     tbody.appendChild(resumoHeader);
 
     Object.keys(clientesTotais).forEach(cliente => {
       const tr = document.createElement("tr");
+      tr.className = "resumo-row";
       tr.innerHTML = `
-        <td>-</td>
+        <td>—</td>
         <td>${cliente}</td>
-        <td>-</td>
-        <td>R$ ${(clientesTotais[cliente].total + clientesTotais[cliente].desconto).toFixed(2)}</td>
-        <td>R$ ${clientesTotais[cliente].desconto.toFixed(2)}</td>
-        <td>R$ ${clientesTotais[cliente].total.toFixed(2)}</td>
-        <td>-</td>
+        <td>—</td>
+        <td class="mono">R$ ${(clientesTotais[cliente].total + clientesTotais[cliente].desconto).toFixed(2)}</td>
+        <td class="mono">R$ ${clientesTotais[cliente].desconto.toFixed(2)}</td>
+        <td class="mono">R$ ${clientesTotais[cliente].total.toFixed(2)}</td>
+        <td>—</td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  document.getElementById("totalGeral").textContent = totalGeral.toFixed(2);
+  document.getElementById("totalGeral").textContent = "R$ " + totalGeral.toFixed(2);
 }
 
-// --- Filtros ---
-document.getElementById("btnFiltrar").addEventListener("click", ()=>{
+document.getElementById("btnFiltrar").addEventListener("click", () => {
   const data = document.getElementById("filtroData").value;
   const cliente = document.getElementById("filtroCliente").value.toLowerCase();
   const produto = document.getElementById("filtroProduto").value.toLowerCase();
 
-  const filtradas = vendas.filter(v=>{
+  const filtradas = vendas.filter(v => {
     let cond = true;
-    if(data) cond = cond && v.data===data;
-    if(cliente) cond = cond && v.cliente.toLowerCase().includes(cliente);
-    if(produto) cond = cond && (v.produtos || []).some(p=>p.descricao.toLowerCase().includes(produto));
+    if (data) cond = cond && v.data === data;
+    if (cliente) cond = cond && v.cliente.toLowerCase().includes(cliente);
+    if (produto) cond = cond && (v.produtos || []).some(p => p.descricao.toLowerCase().includes(produto));
     return cond;
   });
   renderTabela(filtradas);
 });
 
-// --- Limpar filtros ---
-document.getElementById("btnLimpar").addEventListener("click", ()=>{
+document.getElementById("btnLimpar").addEventListener("click", () => {
   document.getElementById("filtroData").value = "";
   document.getElementById("filtroCliente").value = "";
   document.getElementById("filtroProduto").value = "";
@@ -257,11 +273,7 @@ document.getElementById("btnLimpar").addEventListener("click", ()=>{
 });
 
 async function cancelarVenda(vendaId) {
-  if (!vendaId) {
-    alert("ID da venda inválido");
-    return;
-  }
-
+  if (!vendaId) { showToast("ID da venda inválido", true); return; }
   if (!confirm("Deseja realmente cancelar esta venda?")) return;
 
   try {
@@ -270,64 +282,54 @@ async function cancelarVenda(vendaId) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ venda_id: vendaId })
     });
-
     const data = await res.json();
     if (!res.ok) throw new Error(data.error);
-
-    alert("Venda cancelada com sucesso!");
+    showToast("Venda cancelada com sucesso");
     buscarVendas();
   } catch (err) {
-    alert(err.message);
+    showToast(err.message, true);
   }
 }
 
+document.getElementById("tabelaVendas").addEventListener('click', e => {
+  const btn = e.target.closest('button[data-action="cancelar"]');
+  if (btn) cancelarVenda(Number(btn.dataset.id));
+});
 
-
-let vendaTrocaId = null;
-let itensVendaAtual = [];
 document.getElementById("produtoSelect").addEventListener("change", function () {
   const index = this.value;
   if (index === "") return;
-
   const item = itensVendaAtual[index];
   document.getElementById("novaQtd").value = item.quantidade;
   document.getElementById("novoValor").value = item.preco;
 });
 
-
 function abrirTroca(venda) {
-
   vendaTrocaId = venda.venda_id;
   itensVendaAtual = venda.produtos || [];
 
   const select = document.getElementById("produtoSelect");
   select.innerHTML = `<option value="">Selecione o produto</option>`;
-
   itensVendaAtual.forEach((p, index) => {
     const opt = document.createElement("option");
-    opt.value = index; // usamos o índice
+    opt.value = index;
     opt.textContent = `${p.descricao} (${p.tamanho})`;
     select.appendChild(opt);
   });
 
-  // limpar campos
   document.getElementById("novaQtd").value = "";
   document.getElementById("novoValor").value = "";
-
-  document.getElementById("modalTroca").style.display = "flex";
+  document.getElementById("modalTroca").classList.add("show");
 }
 
 function fecharTroca() {
   vendaTrocaId = null;
   itensVendaAtual = [];
   document.getElementById("produtoSelect").innerHTML = "";
-  document.getElementById("modalTroca").style.display = "none";
+  document.getElementById("modalTroca").classList.remove("show");
 }
 
-
-// --- Inicializar ---
 buscarVendas();
 </script>
-
 </body>
 </html>
