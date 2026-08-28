@@ -71,6 +71,58 @@
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 300; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.error { background: var(--red); }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 780px) {
+    body { padding: 20px 12px 48px; }
+    .page-head h1 { font-size: 21px; }
+    .page-head p { font-size: 13px; }
+
+    .filters { flex-direction: column; padding: 12px; }
+    .filters input, .filters .btn { width: 100%; }
+
+    .total-bar { justify-content: stretch; }
+    .total-bar .box { width: 100%; text-align: center; }
+
+    /* Tabela vira lista de cards */
+    table, thead, tbody, tr { display: block; width: 100%; }
+    thead { display: none; }
+    tbody tr { padding: 14px 16px; border-bottom: 1px solid var(--border-soft); }
+    tbody tr.resumo-header { padding: 10px 16px; }
+
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 7px 0;
+      border: none;
+      font-size: 13.5px;
+      text-align: right;
+    }
+    td::before {
+      content: attr(data-label);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      text-align: left;
+      flex-shrink: 0;
+    }
+    td.td-produtos { flex-direction: column; align-items: stretch; text-align: left; }
+    td.td-produtos::before { margin-bottom: 4px; }
+
+    td.td-actions { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 10px; }
+    td.td-actions::before { margin-bottom: 2px; }
+    td.td-actions .actions { flex-direction: column; }
+    td.td-actions .action-btn { width: 100%; text-align: center; }
+
+    tbody tr.resumo-header td { display: block; text-align: center; }
+    tbody tr.resumo-row td::before { color: var(--primary-hover); }
+
+    .modal { padding: 20px; }
+  }
 </style>
 </head>
 <body>
@@ -209,13 +261,13 @@ function renderTabela(lista) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="mono">${venda.data}</td>
-      <td>${venda.cliente}</td>
-      <td>${produtosStr}</td>
-      <td class="mono">R$ ${total.toFixed(2)}</td>
-      <td class="mono">R$ ${desconto.toFixed(2)}</td>
-      <td class="mono">R$ ${totalFinal.toFixed(2)}</td>
-      <td>
+      <td class="mono" data-label="Data">${venda.data}</td>
+      <td data-label="Cliente">${venda.cliente}</td>
+      <td class="td-produtos" data-label="Produtos">${produtosStr}</td>
+      <td class="mono" data-label="Total">R$ ${total.toFixed(2)}</td>
+      <td class="mono" data-label="Desconto">R$ ${desconto.toFixed(2)}</td>
+      <td class="mono" data-label="Total final">R$ ${totalFinal.toFixed(2)}</td>
+      <td class="td-actions" data-label="Ações">
         <div class="actions">
           <button class="action-btn troca-btn" data-action="trocar">Trocar itens</button>
           <button class="action-btn remove-btn" data-action="cancelar" data-id="${venda.venda_id}">Cancelar</button>
@@ -228,6 +280,7 @@ function renderTabela(lista) {
 
   if (Object.keys(clientesTotais).length > 0) {
     const resumoHeader = document.createElement("tr");
+    resumoHeader.className = "resumo-header";
     resumoHeader.innerHTML = `<td colspan="7" style="background:#f7f9fc;font-weight:700;text-align:center;color:var(--ink-soft);">Resumo por cliente</td>`;
     tbody.appendChild(resumoHeader);
 
@@ -235,13 +288,13 @@ function renderTabela(lista) {
       const tr = document.createElement("tr");
       tr.className = "resumo-row";
       tr.innerHTML = `
-        <td>—</td>
-        <td>${cliente}</td>
-        <td>—</td>
-        <td class="mono">R$ ${(clientesTotais[cliente].total + clientesTotais[cliente].desconto).toFixed(2)}</td>
-        <td class="mono">R$ ${clientesTotais[cliente].desconto.toFixed(2)}</td>
-        <td class="mono">R$ ${clientesTotais[cliente].total.toFixed(2)}</td>
-        <td>—</td>
+        <td data-label="Data">—</td>
+        <td data-label="Cliente">${cliente}</td>
+        <td data-label="Produtos">—</td>
+        <td class="mono" data-label="Total">R$ ${(clientesTotais[cliente].total + clientesTotais[cliente].desconto).toFixed(2)}</td>
+        <td class="mono" data-label="Desconto">R$ ${clientesTotais[cliente].desconto.toFixed(2)}</td>
+        <td class="mono" data-label="Total final">R$ ${clientesTotais[cliente].total.toFixed(2)}</td>
+        <td data-label="Ações">—</td>
       `;
       tbody.appendChild(tr);
     });
