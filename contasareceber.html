@@ -36,6 +36,16 @@
   .stat.ok .value { color: var(--green); }
 
   /* ---------- Tabela (desktop/tablet) ---------- */
+  .filter-bar { margin-bottom: 16px; }
+  .filter-input-wrap { position: relative; }
+  .filter-input-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; color: var(--muted); pointer-events: none; }
+  #filtroCliente { width: 100%; padding: 12px 40px 12px 40px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); font-family: inherit; font-size: 14.5px; color: var(--ink); outline: none; transition: border-color .15s; }
+  #filtroCliente:focus { border-color: var(--primary); }
+  #filtroCliente::placeholder { color: var(--muted); }
+  .filter-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; padding: 6px 8px; display: none; }
+  .filter-clear:hover { color: var(--ink-soft); }
+  .filter-clear.visible { display: block; }
+
   .table-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
   thead th { background: #f7f9fc; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); }
@@ -92,6 +102,7 @@
 
     .table-container { display: none; }
     .cards-container { display: block; }
+    #filtroCliente { padding-top: 13px; padding-bottom: 13px; font-size: 16px; }
     .loading-state, .empty-state { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); }
   }
 </style>
@@ -116,6 +127,14 @@
     <div class="stat">
       <div class="label">Contas em aberto</div>
       <div class="value" id="statQtd">0</div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-input-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="filtroCliente" placeholder="Buscar por nome do cliente..." autocomplete="off">
+      <button class="filter-clear" id="btnLimparFiltro" title="Limpar busca">&times;</button>
     </div>
   </div>
 
@@ -159,6 +178,10 @@ const tabela = document.getElementById("tabelaFiados");
 const cardsContainer = document.getElementById("cardsFiados");
 const loadingState = document.getElementById("loadingState");
 const emptyState = document.getElementById("emptyState");
+const filtroInput = document.getElementById("filtroCliente");
+const btnLimparFiltro = document.getElementById("btnLimparFiltro");
+
+let todosFiados = [];
 
 let toastTimer = null;
 function showToast(msg, isError = false) {
@@ -190,17 +213,45 @@ async function carregarFiados() {
   try {
     const res = await fetch(`${API_BASE}/contasareceber`);
     if (!res.ok) throw new Error("Erro ao buscar contas a receber");
-    const fiados = await res.json();
+    todosFiados = await res.json();
 
     loadingState.style.display = "none";
-    atualizarResumo(fiados);
+    atualizarResumo(todosFiados);
+    renderFiados();
+  } catch (err) {
+    loadingState.style.display = "none";
+    showToast(err.message, true);
+  }
+}
 
-    if (fiados.length === 0) {
-      emptyState.style.display = "block";
-      return;
-    }
+function renderFiados() {
+  tabela.innerHTML = "";
+  cardsContainer.innerHTML = "";
 
-    fiados.forEach((fiado) => {
+  const termo = filtroInput.value.trim().toLowerCase();
+  const fiados = termo
+    ? todosFiados.filter(f => f.cliente.toLowerCase().includes(termo))
+    : todosFiados;
+
+  btnLimparFiltro.classList.toggle('visible', termo.length > 0);
+
+  if (todosFiados.length === 0) {
+    emptyState.style.display = "block";
+    emptyState.querySelector('.icon').textContent = '✅';
+    emptyState.querySelector('div:last-child').textContent = 'Nenhum fiado pendente.';
+    return;
+  }
+
+  if (fiados.length === 0) {
+    emptyState.style.display = "block";
+    emptyState.querySelector('.icon').textContent = '🔍';
+    emptyState.querySelector('div:last-child').textContent = `Nenhum cliente encontrado para "${filtroInput.value.trim()}".`;
+    return;
+  }
+
+  emptyState.style.display = "none";
+
+  fiados.forEach((fiado) => {
       const pago = fiado.status === "Pago";
       const valorFmt = parseFloat(fiado.valor).toFixed(2);
 
@@ -241,10 +292,6 @@ async function carregarFiados() {
       `;
       cardsContainer.appendChild(card);
     });
-  } catch (err) {
-    loadingState.style.display = "none";
-    showToast(err.message, true);
-  }
 }
 
 async function marcarPago(id) {
@@ -284,6 +331,13 @@ function handleActionClick(e) {
 
 tabela.addEventListener('click', handleActionClick);
 cardsContainer.addEventListener('click', handleActionClick);
+
+filtroInput.addEventListener('input', renderFiados);
+btnLimparFiltro.addEventListener('click', () => {
+  filtroInput.value = "";
+  filtroInput.focus();
+  renderFiados();
+});
 
 carregarFiados();
 </script>
