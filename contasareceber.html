@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Contas a Receber · Pé Na Cova</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,8 @@
     --radius: 12px;
     --shadow: 0 1px 2px rgba(16,24,38,.04), 0 8px 24px -12px rgba(16,24,38,.12);
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
   body { font-family: "Inter", -apple-system, Segoe UI, Arial, sans-serif; background: var(--paper); margin: 0; padding: 32px 20px 60px; color: var(--ink); -webkit-font-smoothing: antialiased; }
   .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
   .wrap { max-width: 1000px; margin: 0 auto; }
@@ -34,6 +35,7 @@
   .stat.warn .value { color: var(--amber); }
   .stat.ok .value { color: var(--green); }
 
+  /* ---------- Tabela (desktop/tablet) ---------- */
   .table-container { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
   thead th { background: #f7f9fc; color: var(--ink-soft); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); }
@@ -43,7 +45,7 @@
   td { padding: 12px 16px; font-size: 14px; vertical-align: middle; }
   td.centered { text-align: center; }
 
-  .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+  .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
   .badge.pago { background: var(--green-tint); color: var(--green); }
   .badge.pendente { background: var(--amber-tint); color: var(--amber); }
 
@@ -59,9 +61,39 @@
   .back a { color: var(--ink-soft); text-decoration: none; font-size: 13.5px; font-weight: 600; }
   .back a:hover { color: var(--primary); }
 
-  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 100; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: 9px; font-size: 14px; font-weight: 500; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: .2s; z-index: 100; max-width: 90vw; text-align: center; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.error { background: var(--red); }
+
+  /* ---------- Cards (mobile) ---------- */
+  .cards-container { display: none; }
+  .fiado-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px; }
+  .fiado-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .fiado-card-cliente { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; word-break: break-word; }
+  .fiado-card-data { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .fiado-card-valor { text-align: right; }
+  .fiado-card-valor .amount { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
+  .fiado-card-valor .amount.pendente-color { color: var(--amber); }
+  .fiado-card-valor .amount.pago-color { color: var(--green); }
+  .fiado-card-actions { display: flex; gap: 8px; }
+  .fiado-card-actions .action-btn { flex: 1; padding: 12px 10px; font-size: 14px; border-radius: 9px; text-align: center; }
+  .fiado-card .badge { margin-top: 6px; }
+
+  /* ---------- Responsive breakpoint ---------- */
+  @media (max-width: 640px) {
+    body { padding: 20px 14px 48px; }
+    .page-head h1 { font-size: 22px; }
+    .page-head p { font-size: 13.5px; }
+
+    .summary { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 18px; }
+    .summary .stat:nth-child(3) { grid-column: 1 / -1; }
+    .stat { padding: 14px; }
+    .stat .value { font-size: 20px; }
+
+    .table-container { display: none; }
+    .cards-container { display: block; }
+    .loading-state, .empty-state { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); }
+  }
 </style>
 </head>
 <body>
@@ -87,6 +119,7 @@
     </div>
   </div>
 
+  <!-- Tabela: visível em telas maiores -->
   <div class="table-container">
     <table>
       <thead>
@@ -100,11 +133,15 @@
       </thead>
       <tbody id="tabelaFiados"></tbody>
     </table>
-    <div class="loading-state" id="loadingState">Carregando...</div>
-    <div class="empty-state" id="emptyState" style="display:none;">
-      <div class="icon">✅</div>
-      <div>Nenhum fiado pendente.</div>
-    </div>
+  </div>
+
+  <!-- Cards: visível no celular -->
+  <div class="cards-container" id="cardsFiados"></div>
+
+  <div class="loading-state" id="loadingState">Carregando...</div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="icon">✅</div>
+    <div>Nenhum fiado pendente.</div>
   </div>
 
   <div class="back"><a href="painel.html">← Voltar ao painel</a></div>
@@ -119,6 +156,7 @@ if (sessionStorage.getItem('isLoggedIn') !== 'true') {
 
 const API_BASE = "/api";
 const tabela = document.getElementById("tabelaFiados");
+const cardsContainer = document.getElementById("cardsFiados");
 const loadingState = document.getElementById("loadingState");
 const emptyState = document.getElementById("emptyState");
 
@@ -147,6 +185,7 @@ async function carregarFiados() {
   loadingState.style.display = "block";
   emptyState.style.display = "none";
   tabela.innerHTML = "";
+  cardsContainer.innerHTML = "";
 
   try {
     const res = await fetch(`${API_BASE}/contasareceber`);
@@ -163,11 +202,14 @@ async function carregarFiados() {
 
     fiados.forEach((fiado) => {
       const pago = fiado.status === "Pago";
+      const valorFmt = parseFloat(fiado.valor).toFixed(2);
+
+      // Linha da tabela (desktop)
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${fiado.cliente}</td>
         <td class="mono">${fiado.data}</td>
-        <td class="mono">R$ ${parseFloat(fiado.valor).toFixed(2)}</td>
+        <td class="mono">R$ ${valorFmt}</td>
         <td><span class="badge ${pago ? 'pago' : 'pendente'}">${fiado.status}</span></td>
         <td>
           <div class="actions">
@@ -177,6 +219,27 @@ async function carregarFiados() {
         </td>
       `;
       tabela.appendChild(row);
+
+      // Card (mobile)
+      const card = document.createElement("div");
+      card.className = "fiado-card";
+      card.innerHTML = `
+        <div class="fiado-card-top">
+          <div>
+            <div class="fiado-card-cliente">${fiado.cliente}</div>
+            <div class="fiado-card-data mono">${fiado.data}</div>
+            <span class="badge ${pago ? 'pago' : 'pendente'}">${fiado.status}</span>
+          </div>
+          <div class="fiado-card-valor">
+            <span class="amount mono ${pago ? 'pago-color' : 'pendente-color'}">R$ ${valorFmt}</span>
+          </div>
+        </div>
+        <div class="fiado-card-actions">
+          ${!pago ? `<button class="action-btn pay-btn" data-action="pagar" data-id="${fiado.id}">Marcar pago</button>` : ""}
+          <button class="action-btn delete-btn" data-action="remover" data-id="${fiado.id}">Remover</button>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
     });
   } catch (err) {
     loadingState.style.display = "none";
@@ -211,13 +274,16 @@ async function remover(id) {
   }
 }
 
-tabela.addEventListener('click', e => {
+function handleActionClick(e) {
   const btn = e.target.closest('button');
   if (!btn) return;
   const id = Number(btn.dataset.id);
   if (btn.dataset.action === 'pagar') marcarPago(id);
   if (btn.dataset.action === 'remover') remover(id);
-});
+}
+
+tabela.addEventListener('click', handleActionClick);
+cardsContainer.addEventListener('click', handleActionClick);
 
 carregarFiados();
 </script>
