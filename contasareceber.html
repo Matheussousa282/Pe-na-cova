@@ -57,6 +57,7 @@
   td.centered { text-align: center; }
 
   .valor-cell .original { display: block; font-size: 12px; color: var(--muted); }
+  .valor-cell .recebido { display: block; font-size: 12px; color: var(--green); font-weight: 600; }
 
   .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
   .badge.pago { background: var(--green-tint); color: var(--green); }
@@ -108,6 +109,10 @@
   .modal-devido { display: flex; justify-content: space-between; align-items: baseline; background: var(--paper); border-radius: 9px; padding: 12px 14px; margin-bottom: 18px; }
   .modal-devido .label { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
   .modal-devido .valor { font-size: 18px; font-weight: 800; color: var(--amber); }
+  .modal-recebido-ate-agora { margin: -12px 0 18px; font-size: 12.5px; color: var(--green); font-weight: 600; }
+  .modal-restante { margin: -6px 0 18px; font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+  .modal-restante.zerado { color: var(--green); }
+  .modal-restante.erro { color: var(--red); }
   .modal-quick { display: flex; gap: 8px; margin-top: 8px; }
   .modal-quick button { flex: 1; padding: 8px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; cursor: pointer; color: var(--ink-soft); }
   .modal-quick button:hover { background: var(--primary-tint); color: var(--primary); border-color: var(--primary); }
@@ -205,15 +210,23 @@
       <span class="label">Valor devido</span>
       <span class="valor mono" id="modalValorDevido">R$ 0,00</span>
     </div>
+    <p class="modal-recebido-ate-agora" id="modalRecebidoAteAgora" style="display:none;"></p>
 
     <div class="modal-field">
       <label for="modalValorReceber">Valor recebido agora</label>
-      <input type="number" id="modalValorReceber" step="0.01" min="0.01" inputmode="decimal">
+      <input type="number" id="modalValorReceber" step="0.01" min="0" inputmode="decimal">
       <div class="modal-quick">
         <button type="button" id="btnValorTotal">Valor total</button>
         <button type="button" id="btnValorMetade">Metade</button>
       </div>
     </div>
+
+    <div class="modal-field">
+      <label for="modalDesconto">Desconto concedido (opcional)</label>
+      <input type="number" id="modalDesconto" step="0.01" min="0" inputmode="decimal" value="0">
+    </div>
+
+    <p class="modal-restante" id="modalRestante"></p>
 
     <div class="modal-field">
       <label for="modalFormaPagamento">Forma de pagamento</label>
@@ -251,7 +264,9 @@ const modalOverlay = document.getElementById("modalOverlay");
 const modalCliente = document.getElementById("modalCliente");
 const modalValorDevido = document.getElementById("modalValorDevido");
 const modalValorReceber = document.getElementById("modalValorReceber");
+const modalDesconto = document.getElementById("modalDesconto");
 const modalFormaPagamento = document.getElementById("modalFormaPagamento");
+const modalRestante = document.getElementById("modalRestante");
 
 let todosFiados = [];
 let fiadoSelecionado = null;
@@ -275,10 +290,11 @@ function fmtMoeda(v) {
 function getValores(fiado) {
   const valor = Number(fiado.valor) || 0;
   const valorPago = Number(fiado.valor_pago) || 0;
+  const desconto = Number(fiado.desconto) || 0;
   const valorPendente = fiado.valor_pendente != null
     ? Number(fiado.valor_pendente)
-    : valor - valorPago;
-  return { valor, valorPago, valorPendente: Math.max(valorPendente, 0) };
+    : valor - valorPago - desconto;
+  return { valor, valorPago, desconto, valorPendente: Math.max(valorPendente, 0) };
 }
 
 function atualizarResumo(fiados) {
@@ -357,9 +373,17 @@ function renderFiados() {
       const classe = statusClasse(fiado.status);
       const { valor, valorPendente } = getValores(fiado);
 
+      const valorPagoNum = getValores(fiado).valorPago;
+      const descontoNum = getValores(fiado).desconto;
+
+      const linhasExtra = [];
+      if (valorPagoNum > 0) linhasExtra.push(`Recebido R$ ${valorPagoNum.toFixed(2)}`);
+      if (descontoNum > 0) linhasExtra.push(`Desconto R$ ${descontoNum.toFixed(2)}`);
+      const extraSpan = linhasExtra.length ? `<span class="recebido">${linhasExtra.join(' · ')}</span>` : '';
+
       const valorCelulaHtml = parcial
-        ? `R$ ${valorPendente.toFixed(2)} <span class="original">de R$ ${valor.toFixed(2)}</span>`
-        : `R$ ${valor.toFixed(2)}`;
+        ? `R$ ${valorPendente.toFixed(2)} <span class="original">pendente de R$ ${valor.toFixed(2)}</span>${extraSpan}`
+        : `R$ ${valor.toFixed(2)}${extraSpan}`;
 
       // Linha da tabela (desktop)
       const row = document.createElement("tr");
@@ -390,6 +414,8 @@ function renderFiados() {
           <div class="fiado-card-valor">
             <span class="amount mono ${classe}-color">R$ ${valorPendente.toFixed(2)}</span>
             ${parcial ? `<span class="original mono">de R$ ${valor.toFixed(2)}</span>` : ""}
+            ${valorPagoNum > 0 ? `<span class="original mono">Recebido R$ ${valorPagoNum.toFixed(2)}</span>` : ""}
+            ${descontoNum > 0 ? `<span class="original mono">Desconto R$ ${descontoNum.toFixed(2)}</span>` : ""}
           </div>
         </div>
         <div class="fiado-card-actions">
@@ -406,16 +432,46 @@ function abrirModalRecebimento(id) {
   if (!fiado) return;
 
   fiadoSelecionado = fiado;
-  const { valorPendente } = getValores(fiado);
+  const { valor, valorPago, valorPendente } = getValores(fiado);
 
   modalCliente.textContent = fiado.cliente;
   modalValorDevido.textContent = fmtMoeda(valorPendente);
   modalValorReceber.value = valorPendente.toFixed(2);
   modalValorReceber.max = valorPendente.toFixed(2);
+  modalDesconto.value = "0";
   modalFormaPagamento.value = "dinheiro";
+
+  const modalRecebidoAteAgora = document.getElementById("modalRecebidoAteAgora");
+  if (valorPago > 0) {
+    modalRecebidoAteAgora.textContent = `Já recebido: ${fmtMoeda(valorPago)} de ${fmtMoeda(valor)}`;
+    modalRecebidoAteAgora.style.display = "block";
+  } else {
+    modalRecebidoAteAgora.style.display = "none";
+  }
+
+  atualizarRestanteModal();
 
   modalOverlay.classList.add("open");
   setTimeout(() => modalValorReceber.focus(), 50);
+}
+
+function atualizarRestanteModal() {
+  if (!fiadoSelecionado) return;
+  const { valorPendente } = getValores(fiadoSelecionado);
+  const recebido = parseFloat(modalValorReceber.value) || 0;
+  const desconto = parseFloat(modalDesconto.value) || 0;
+  const restante = valorPendente - recebido - desconto;
+
+  modalRestante.classList.remove('zerado', 'erro');
+  if (restante < -0.01) {
+    modalRestante.textContent = `Passou R$ ${Math.abs(restante).toFixed(2)} do valor devido`;
+    modalRestante.classList.add('erro');
+  } else if (restante <= 0.01) {
+    modalRestante.textContent = 'Conta ficará quitada';
+    modalRestante.classList.add('zerado');
+  } else {
+    modalRestante.textContent = `Ficará pendente: ${fmtMoeda(restante)}`;
+  }
 }
 
 function fecharModal() {
@@ -427,15 +483,21 @@ async function confirmarRecebimento() {
   if (!fiadoSelecionado) return;
 
   const { valorPendente } = getValores(fiadoSelecionado);
-  const valorRecebido = parseFloat(modalValorReceber.value);
+  const valorRecebido = parseFloat(modalValorReceber.value) || 0;
+  const desconto = parseFloat(modalDesconto.value) || 0;
+  const totalAbatido = valorRecebido + desconto;
   const forma = modalFormaPagamento.value;
 
-  if (!valorRecebido || valorRecebido <= 0) {
-    showToast("Informe um valor válido.", true);
+  if (totalAbatido <= 0) {
+    showToast("Informe um valor recebido e/ou um desconto.", true);
     return;
   }
-  if (valorRecebido > valorPendente + 0.01) {
-    showToast(`Valor maior que o pendente (${fmtMoeda(valorPendente)}).`, true);
+  if (valorRecebido > 0 && !forma) {
+    showToast("Selecione a forma de pagamento.", true);
+    return;
+  }
+  if (totalAbatido > valorPendente + 0.01) {
+    showToast(`Valor + desconto maior que o pendente (${fmtMoeda(valorPendente)}).`, true);
     return;
   }
 
@@ -446,6 +508,7 @@ async function confirmarRecebimento() {
       body: JSON.stringify({
         id: fiadoSelecionado.id,
         valor_recebido: valorRecebido,
+        desconto: desconto,
         forma_pagamento: forma
       })
     });
@@ -454,10 +517,15 @@ async function confirmarRecebimento() {
     if (!res.ok) throw new Error(data.error || "Erro ao registrar recebimento");
 
     const restante = Number(data.valor_pendente) || 0;
+    const partes = [];
+    if (valorRecebido > 0) partes.push(`recebido ${fmtMoeda(valorRecebido)}`);
+    if (desconto > 0) partes.push(`desconto ${fmtMoeda(desconto)}`);
+    const resumo = partes.join(' + ');
+
     if (restante > 0.01) {
-      showToast(`Recebido ${fmtMoeda(valorRecebido)}. Restam ${fmtMoeda(restante)}.`);
+      showToast(`${resumo}. Restam ${fmtMoeda(restante)}.`);
     } else {
-      showToast(`Conta quitada! Recebido ${fmtMoeda(valorRecebido)}.`);
+      showToast(`Conta quitada! ${resumo}.`);
     }
 
     fecharModal();
@@ -501,15 +569,21 @@ document.getElementById("btnModalCancelar").addEventListener("click", fecharModa
 document.getElementById("btnModalConfirmar").addEventListener("click", confirmarRecebimento);
 modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) fecharModal(); });
 
+modalValorReceber.addEventListener("input", atualizarRestanteModal);
+modalDesconto.addEventListener("input", atualizarRestanteModal);
+
 document.getElementById("btnValorTotal").addEventListener("click", () => {
   if (!fiadoSelecionado) return;
   const { valorPendente } = getValores(fiadoSelecionado);
-  modalValorReceber.value = valorPendente.toFixed(2);
+  const desconto = parseFloat(modalDesconto.value) || 0;
+  modalValorReceber.value = Math.max(valorPendente - desconto, 0).toFixed(2);
+  atualizarRestanteModal();
 });
 document.getElementById("btnValorMetade").addEventListener("click", () => {
   if (!fiadoSelecionado) return;
   const { valorPendente } = getValores(fiadoSelecionado);
   modalValorReceber.value = (valorPendente / 2).toFixed(2);
+  atualizarRestanteModal();
 });
 
 carregarFiados();
