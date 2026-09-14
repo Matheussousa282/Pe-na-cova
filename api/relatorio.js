@@ -62,8 +62,16 @@ export default async function handler(req, res) {
 
     for (let venda of vendas) {
       // Buscar itens da venda
+      // COALESCE: quando o item não tem produto vinculado (ex.: um
+      // recebimento de conta a receber), usa a descrição manual salva
+      // em vendas_itens.descricao_manual.
       let produtosQuery = `
-        SELECT p.descricao, vp.tamanho, vp.quantidade, vp.preco, (vp.quantidade * vp.preco) AS subtotal
+        SELECT 
+          COALESCE(p.descricao, vp.descricao_manual, '-') AS descricao,
+          vp.tamanho,
+          vp.quantidade,
+          vp.preco,
+          (vp.quantidade * vp.preco) AS subtotal
         FROM vendas_itens vp
         LEFT JOIN produtos p ON vp.produto_id = p.id
         WHERE vp.venda_id = $1
@@ -71,7 +79,7 @@ export default async function handler(req, res) {
       const produtosParams = [venda.venda_id];
 
       if (produto) {
-        produtosQuery += ` AND LOWER(p.descricao) LIKE '%' || LOWER($2) || '%'`;
+        produtosQuery += ` AND LOWER(COALESCE(p.descricao, vp.descricao_manual, '')) LIKE '%' || LOWER($2) || '%'`;
         produtosParams.push(produto);
       }
 
