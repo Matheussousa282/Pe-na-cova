@@ -31,6 +31,11 @@
   .field input:disabled { background: #f6f8fb; color: var(--ink-soft); }
   .field select:focus, .field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
 
+  .desconto-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
+  .toggle-btn { flex: 1; padding: 8px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--ink-soft); font-family: inherit; transition: .15s; }
+  .toggle-btn:hover { background: var(--border-soft); }
+  .toggle-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
   .resumo-valores { margin: -4px 0 20px; }
   .resumo-linha { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-size: 14px; color: var(--ink-soft); }
   .resumo-linha.total-final { padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--border-soft); font-size: 22px; font-weight: 800; color: var(--primary); }
@@ -58,7 +63,11 @@
   </div>
 
   <div class="field">
-    <label for="desconto">Desconto (R$)</label>
+    <label for="desconto">Desconto</label>
+    <div class="desconto-toggle">
+      <button type="button" class="toggle-btn active" id="btnModoReais" data-modo="reais">R$</button>
+      <button type="button" class="toggle-btn" id="btnModoPercentual" data-modo="percentual">%</button>
+    </div>
     <input type="number" id="desconto" step="0.01" min="0" value="0" inputmode="decimal">
   </div>
 
@@ -68,7 +77,7 @@
       <span class="valor" id="valorSubtotal">R$ 0,00</span>
     </div>
     <div class="resumo-linha">
-      <span>Desconto</span>
+      <span id="labelDescontoResumo">Desconto</span>
       <span class="valor" id="valorDescontoResumo">R$ 0,00</span>
     </div>
     <div class="resumo-linha total-final">
@@ -118,15 +127,25 @@ let venda = JSON.parse(localStorage.getItem("vendaAtual"));
 let carrinho = JSON.parse(localStorage.getItem("carrinhoAtual")) || [];
 
 const descontoInput = document.getElementById("desconto");
+const btnModoReais = document.getElementById("btnModoReais");
+const btnModoPercentual = document.getElementById("btnModoPercentual");
+let descontoModo = "reais"; // "reais" | "percentual"
 
 document.getElementById("cliente").value = venda?.cliente || "";
-descontoInput.max = venda?.total ?? 0;
 
 function totalComDesconto() {
   const subtotal = venda?.total ?? 0;
-  let desconto = parseFloat(descontoInput.value) || 0;
-  if (desconto < 0) desconto = 0;
-  if (desconto > subtotal) desconto = subtotal;
+  let valorDigitado = parseFloat(descontoInput.value) || 0;
+  if (valorDigitado < 0) valorDigitado = 0;
+
+  let desconto;
+  if (descontoModo === "percentual") {
+    if (valorDigitado > 100) valorDigitado = 100;
+    desconto = subtotal * (valorDigitado / 100);
+  } else {
+    if (valorDigitado > subtotal) valorDigitado = subtotal;
+    desconto = valorDigitado;
+  }
   return { subtotal, desconto, totalFinal: subtotal - desconto };
 }
 
@@ -135,7 +154,42 @@ function atualizarResumoValores() {
   document.getElementById("valorSubtotal").textContent = fmtMoeda(subtotal);
   document.getElementById("valorDescontoResumo").textContent = fmtMoeda(desconto);
   document.getElementById("valorDestaque").textContent = fmtMoeda(totalFinal);
+
+  const label = document.getElementById("labelDescontoResumo");
+  if (descontoModo === "percentual") {
+    const percent = parseFloat(descontoInput.value) || 0;
+    label.textContent = `Desconto (${percent.toFixed(1)}%)`;
+  } else {
+    label.textContent = "Desconto";
+  }
 }
+
+function setModoDesconto(novoModo) {
+  if (novoModo === descontoModo) return;
+  const subtotal = venda?.total ?? 0;
+  const valorAtual = parseFloat(descontoInput.value) || 0;
+
+  // Converte o valor digitado para o novo modo, sem perder o que já
+  // estava calculado (ex.: 10% de R$200 vira R$20,00 ao trocar pra R$).
+  if (novoModo === "percentual") {
+    const percent = subtotal > 0 ? (valorAtual / subtotal) * 100 : 0;
+    descontoInput.value = Math.min(percent, 100).toFixed(2);
+    descontoInput.max = 100;
+  } else {
+    const reais = subtotal * (Math.min(valorAtual, 100) / 100);
+    descontoInput.value = reais.toFixed(2);
+    descontoInput.max = subtotal;
+  }
+
+  descontoModo = novoModo;
+  btnModoReais.classList.toggle("active", novoModo === "reais");
+  btnModoPercentual.classList.toggle("active", novoModo === "percentual");
+  atualizarResumoValores();
+}
+
+btnModoReais.addEventListener("click", () => setModoDesconto("reais"));
+btnModoPercentual.addEventListener("click", () => setModoDesconto("percentual"));
+descontoInput.max = venda?.total ?? 0;
 
 descontoInput.addEventListener("input", atualizarResumoValores);
 atualizarResumoValores();

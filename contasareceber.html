@@ -123,6 +123,11 @@
   .modal-actions .btn.cancel { background: var(--border-soft); color: var(--ink-soft); }
   .modal-actions .btn.cancel:hover { background: var(--border); }
 
+  .desconto-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
+  .toggle-btn { flex: 1; padding: 8px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; font-size: 12.5px; font-weight: 700; cursor: pointer; color: var(--ink-soft); font-family: inherit; transition: .15s; }
+  .toggle-btn:hover { background: var(--border-soft); }
+  .toggle-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
   /* ---------- Responsive breakpoint ---------- */
   @media (max-width: 640px) {
     body { padding: 20px 14px 48px; }
@@ -223,6 +228,10 @@
 
     <div class="modal-field">
       <label for="modalDesconto">Desconto concedido (opcional)</label>
+      <div class="desconto-toggle">
+        <button type="button" class="toggle-btn active" id="btnModalModoReais" data-modo="reais">R$</button>
+        <button type="button" class="toggle-btn" id="btnModalModoPercentual" data-modo="percentual">%</button>
+      </div>
       <input type="number" id="modalDesconto" step="0.01" min="0" inputmode="decimal" value="0">
     </div>
 
@@ -265,8 +274,11 @@ const modalCliente = document.getElementById("modalCliente");
 const modalValorDevido = document.getElementById("modalValorDevido");
 const modalValorReceber = document.getElementById("modalValorReceber");
 const modalDesconto = document.getElementById("modalDesconto");
+const btnModalModoReais = document.getElementById("btnModalModoReais");
+const btnModalModoPercentual = document.getElementById("btnModalModoPercentual");
 const modalFormaPagamento = document.getElementById("modalFormaPagamento");
 const modalRestante = document.getElementById("modalRestante");
+let modalDescontoModo = "reais"; // "reais" | "percentual"
 
 let todosFiados = [];
 let fiadoSelecionado = null;
@@ -439,6 +451,9 @@ function abrirModalRecebimento(id) {
   modalValorReceber.value = valorPendente.toFixed(2);
   modalValorReceber.max = valorPendente.toFixed(2);
   modalDesconto.value = "0";
+  modalDescontoModo = "reais";
+  btnModalModoReais.classList.add("active");
+  btnModalModoPercentual.classList.remove("active");
   modalFormaPagamento.value = "dinheiro";
 
   const modalRecebidoAteAgora = document.getElementById("modalRecebidoAteAgora");
@@ -455,11 +470,46 @@ function abrirModalRecebimento(id) {
   setTimeout(() => modalValorReceber.focus(), 50);
 }
 
+// Converte o valor digitado no campo de desconto para reais,
+// considerando o modo atual (R$ direto, ou % sobre o valor pendente).
+function getDescontoReaisModal() {
+  if (!fiadoSelecionado) return 0;
+  const { valorPendente } = getValores(fiadoSelecionado);
+  let valorDigitado = parseFloat(modalDesconto.value) || 0;
+  if (valorDigitado < 0) valorDigitado = 0;
+
+  if (modalDescontoModo === "percentual") {
+    if (valorDigitado > 100) valorDigitado = 100;
+    return valorPendente * (valorDigitado / 100);
+  }
+  if (valorDigitado > valorPendente) valorDigitado = valorPendente;
+  return valorDigitado;
+}
+
+function setModalModoDesconto(novoModo) {
+  if (novoModo === modalDescontoModo || !fiadoSelecionado) return;
+  const { valorPendente } = getValores(fiadoSelecionado);
+  const valorAtual = parseFloat(modalDesconto.value) || 0;
+
+  if (novoModo === "percentual") {
+    const percent = valorPendente > 0 ? (valorAtual / valorPendente) * 100 : 0;
+    modalDesconto.value = Math.min(percent, 100).toFixed(2);
+  } else {
+    const reais = valorPendente * (Math.min(valorAtual, 100) / 100);
+    modalDesconto.value = reais.toFixed(2);
+  }
+
+  modalDescontoModo = novoModo;
+  btnModalModoReais.classList.toggle("active", novoModo === "reais");
+  btnModalModoPercentual.classList.toggle("active", novoModo === "percentual");
+  atualizarRestanteModal();
+}
+
 function atualizarRestanteModal() {
   if (!fiadoSelecionado) return;
   const { valorPendente } = getValores(fiadoSelecionado);
   const recebido = parseFloat(modalValorReceber.value) || 0;
-  const desconto = parseFloat(modalDesconto.value) || 0;
+  const desconto = getDescontoReaisModal();
   const restante = valorPendente - recebido - desconto;
 
   modalRestante.classList.remove('zerado', 'erro');
@@ -484,7 +534,7 @@ async function confirmarRecebimento() {
 
   const { valorPendente } = getValores(fiadoSelecionado);
   const valorRecebido = parseFloat(modalValorReceber.value) || 0;
-  const desconto = parseFloat(modalDesconto.value) || 0;
+  const desconto = getDescontoReaisModal();
   const totalAbatido = valorRecebido + desconto;
   const forma = modalFormaPagamento.value;
 
@@ -571,11 +621,13 @@ modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) f
 
 modalValorReceber.addEventListener("input", atualizarRestanteModal);
 modalDesconto.addEventListener("input", atualizarRestanteModal);
+btnModalModoReais.addEventListener("click", () => setModalModoDesconto("reais"));
+btnModalModoPercentual.addEventListener("click", () => setModalModoDesconto("percentual"));
 
 document.getElementById("btnValorTotal").addEventListener("click", () => {
   if (!fiadoSelecionado) return;
   const { valorPendente } = getValores(fiadoSelecionado);
-  const desconto = parseFloat(modalDesconto.value) || 0;
+  const desconto = getDescontoReaisModal();
   modalValorReceber.value = Math.max(valorPendente - desconto, 0).toFixed(2);
   atualizarRestanteModal();
 });
