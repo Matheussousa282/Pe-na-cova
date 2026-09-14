@@ -31,7 +31,10 @@
   .field input:disabled { background: #f6f8fb; color: var(--ink-soft); }
   .field select:focus, .field input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
 
-  .valor-destaque { font-size: 26px; font-weight: 800; color: var(--primary); margin: -4px 0 20px; }
+  .resumo-valores { margin: -4px 0 20px; }
+  .resumo-linha { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-size: 14px; color: var(--ink-soft); }
+  .resumo-linha.total-final { padding-top: 8px; margin-top: 6px; border-top: 1px solid var(--border-soft); font-size: 22px; font-weight: 800; color: var(--primary); }
+  .resumo-linha .valor { font-family: "JetBrains Mono", ui-monospace, monospace; }
 
   .btn { width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 9px; font-size: 14.5px; font-weight: 700; cursor: pointer; transition: .15s; font-family: inherit; }
   .btn:hover { background: var(--primary-hover); }
@@ -54,7 +57,25 @@
     <input type="text" id="cliente" disabled>
   </div>
 
-  <div class="valor-destaque" id="valorDestaque">R$ 0,00</div>
+  <div class="field">
+    <label for="desconto">Desconto (R$)</label>
+    <input type="number" id="desconto" step="0.01" min="0" value="0" inputmode="decimal">
+  </div>
+
+  <div class="resumo-valores">
+    <div class="resumo-linha">
+      <span>Subtotal</span>
+      <span class="valor" id="valorSubtotal">R$ 0,00</span>
+    </div>
+    <div class="resumo-linha">
+      <span>Desconto</span>
+      <span class="valor" id="valorDescontoResumo">R$ 0,00</span>
+    </div>
+    <div class="resumo-linha total-final">
+      <span>Total a cobrar</span>
+      <span class="valor" id="valorDestaque">R$ 0,00</span>
+    </div>
+  </div>
 
   <div class="field">
     <label for="formaPagamento">Forma de pagamento</label>
@@ -87,18 +108,43 @@ function showToast(msg, isError = false) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
+function fmtMoeda(v) {
+  return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
 const { jsPDF } = window.jspdf;
 
 let venda = JSON.parse(localStorage.getItem("vendaAtual"));
 let carrinho = JSON.parse(localStorage.getItem("carrinhoAtual")) || [];
 
+const descontoInput = document.getElementById("desconto");
+
 document.getElementById("cliente").value = venda?.cliente || "";
-document.getElementById("valorDestaque").textContent =
-  "R$ " + (venda?.total ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+descontoInput.max = venda?.total ?? 0;
+
+function totalComDesconto() {
+  const subtotal = venda?.total ?? 0;
+  let desconto = parseFloat(descontoInput.value) || 0;
+  if (desconto < 0) desconto = 0;
+  if (desconto > subtotal) desconto = subtotal;
+  return { subtotal, desconto, totalFinal: subtotal - desconto };
+}
+
+function atualizarResumoValores() {
+  const { subtotal, desconto, totalFinal } = totalComDesconto();
+  document.getElementById("valorSubtotal").textContent = fmtMoeda(subtotal);
+  document.getElementById("valorDescontoResumo").textContent = fmtMoeda(desconto);
+  document.getElementById("valorDestaque").textContent = fmtMoeda(totalFinal);
+}
+
+descontoInput.addEventListener("input", atualizarResumoValores);
+atualizarResumoValores();
 
 async function finalizarRecebimento() {
   if (!venda) { showToast("Nenhuma venda em andamento.", true); return; }
+
   const forma = document.getElementById("formaPagamento").value;
+  const { desconto, totalFinal } = totalComDesconto();
 
   try {
     const itensAPI = carrinho.map(item => ({
@@ -115,7 +161,8 @@ async function finalizarRecebimento() {
         cliente_id: venda.cliente_id,
         itens: itensAPI,
         forma_pagamento: forma,
-        total: venda.total
+        total: venda.total,
+        desconto: desconto
       })
     });
 
@@ -123,7 +170,7 @@ async function finalizarRecebimento() {
     if (!res.ok) throw new Error(data.error || "Erro ao finalizar venda");
 
     showToast("Venda finalizada com sucesso!");
-    gerarPDF();
+    gerarPDF(desconto, totalFinal);
 
     localStorage.removeItem("vendaAtual");
     localStorage.removeItem("carrinhoAtual");
@@ -132,7 +179,7 @@ async function finalizarRecebimento() {
   }
 }
 
-function gerarPDF() {
+function gerarPDF(desconto, totalFinal) {
   const doc = new jsPDF();
 
   doc.setFontSize(18);
@@ -163,8 +210,18 @@ function gerarPDF() {
     startY += 7;
   });
 
+  startY += 6;
+  doc.setFont(undefined, "normal");
+  doc.text(`Subtotal: R$ ${venda.total.toFixed(2)}`, 150, startY, { align: "left" });
+
+  if (desconto > 0) {
+    startY += 7;
+    doc.text(`Desconto: R$ ${desconto.toFixed(2)}`, 150, startY, { align: "left" });
+  }
+
+  startY += 10;
   doc.setFont(undefined, "bold");
-  doc.text(`Total: R$ ${venda.total.toFixed(2)}`, 150, startY + 10);
+  doc.text(`Total: R$ ${totalFinal.toFixed(2)}`, 150, startY, { align: "left" });
 
   doc.save(`nota_${venda.cliente}_${Date.now()}.pdf`);
 
