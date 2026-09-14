@@ -13,6 +13,7 @@
     --primary: #0e6b5c; --primary-hover: #0a5548; --primary-tint: #e4f2ee;
     --red: #b0362b; --red-tint: #fbe9e7; --amber: #b5750a; --amber-tint: #fdf3e0;
     --green: #1f8a4c; --green-tint: #e2f5ea;
+    --blue: #1a5fb4; --blue-tint: #e6effb;
     --radius: 12px;
     --shadow: 0 1px 2px rgba(16,24,38,.04), 0 8px 24px -12px rgba(16,24,38,.12);
   }
@@ -55,9 +56,12 @@
   td { padding: 12px 16px; font-size: 14px; vertical-align: middle; }
   td.centered { text-align: center; }
 
+  .valor-cell .original { display: block; font-size: 12px; color: var(--muted); }
+
   .badge { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
   .badge.pago { background: var(--green-tint); color: var(--green); }
   .badge.pendente { background: var(--amber-tint); color: var(--amber); }
+  .badge.parcial { background: var(--blue-tint); color: var(--blue); }
 
   .actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .action-btn { padding: 7px 12px; border: 1px solid var(--border); border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 600; background: var(--surface); color: var(--ink-soft); transition: .15s; }
@@ -85,9 +89,34 @@
   .fiado-card-valor .amount { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.01em; }
   .fiado-card-valor .amount.pendente-color { color: var(--amber); }
   .fiado-card-valor .amount.pago-color { color: var(--green); }
+  .fiado-card-valor .amount.parcial-color { color: var(--blue); }
+  .fiado-card-valor .original { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
   .fiado-card-actions { display: flex; gap: 8px; }
   .fiado-card-actions .action-btn { flex: 1; padding: 12px 10px; font-size: 14px; border-radius: 9px; text-align: center; }
   .fiado-card .badge { margin-top: 6px; }
+
+  /* ---------- Modal de recebimento ---------- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(16,24,38,.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-card { width: 100%; max-width: 400px; background: var(--surface); border-radius: var(--radius); padding: 26px; box-shadow: 0 20px 60px -12px rgba(16,24,38,.35); }
+  .modal-card h3 { margin: 0 0 4px; font-size: 18px; font-weight: 800; }
+  .modal-card .modal-sub { font-size: 13.5px; color: var(--muted); margin: 0 0 20px; }
+  .modal-field { margin-bottom: 16px; }
+  .modal-field label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; }
+  .modal-field input, .modal-field select { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--border); font-size: 15px; font-family: inherit; background: var(--surface); }
+  .modal-field input:focus, .modal-field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-tint); }
+  .modal-devido { display: flex; justify-content: space-between; align-items: baseline; background: var(--paper); border-radius: 9px; padding: 12px 14px; margin-bottom: 18px; }
+  .modal-devido .label { font-size: 12.5px; color: var(--ink-soft); font-weight: 600; }
+  .modal-devido .valor { font-size: 18px; font-weight: 800; color: var(--amber); }
+  .modal-quick { display: flex; gap: 8px; margin-top: 8px; }
+  .modal-quick button { flex: 1; padding: 8px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; cursor: pointer; color: var(--ink-soft); }
+  .modal-quick button:hover { background: var(--primary-tint); color: var(--primary); border-color: var(--primary); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+  .modal-actions .btn { flex: 1; padding: 12px; border: none; border-radius: 9px; font-size: 14.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .modal-actions .btn.confirm { background: var(--primary); color: white; }
+  .modal-actions .btn.confirm:hover { background: var(--primary-hover); }
+  .modal-actions .btn.cancel { background: var(--border-soft); color: var(--ink-soft); }
+  .modal-actions .btn.cancel:hover { background: var(--border); }
 
   /* ---------- Responsive breakpoint ---------- */
   @media (max-width: 640px) {
@@ -166,6 +195,43 @@
   <div class="back"><a href="painel.html">← Voltar ao painel</a></div>
 </div>
 
+<!-- Modal de recebimento -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card">
+    <h3>Receber pagamento</h3>
+    <p class="modal-sub" id="modalCliente">Cliente</p>
+
+    <div class="modal-devido">
+      <span class="label">Valor devido</span>
+      <span class="valor mono" id="modalValorDevido">R$ 0,00</span>
+    </div>
+
+    <div class="modal-field">
+      <label for="modalValorReceber">Valor recebido agora</label>
+      <input type="number" id="modalValorReceber" step="0.01" min="0.01" inputmode="decimal">
+      <div class="modal-quick">
+        <button type="button" id="btnValorTotal">Valor total</button>
+        <button type="button" id="btnValorMetade">Metade</button>
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label for="modalFormaPagamento">Forma de pagamento</label>
+      <select id="modalFormaPagamento">
+        <option value="dinheiro">Dinheiro</option>
+        <option value="pix">Pix</option>
+        <option value="debito">Cartão de débito</option>
+        <option value="credito">Cartão de crédito</option>
+      </select>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn cancel" id="btnModalCancelar">Cancelar</button>
+      <button class="btn confirm" id="btnModalConfirmar">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -181,7 +247,14 @@ const emptyState = document.getElementById("emptyState");
 const filtroInput = document.getElementById("filtroCliente");
 const btnLimparFiltro = document.getElementById("btnLimparFiltro");
 
+const modalOverlay = document.getElementById("modalOverlay");
+const modalCliente = document.getElementById("modalCliente");
+const modalValorDevido = document.getElementById("modalValorDevido");
+const modalValorReceber = document.getElementById("modalValorReceber");
+const modalFormaPagamento = document.getElementById("modalFormaPagamento");
+
 let todosFiados = [];
+let fiadoSelecionado = null;
 
 let toastTimer = null;
 function showToast(msg, isError = false) {
@@ -193,15 +266,36 @@ function showToast(msg, isError = false) {
   toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
 }
 
-function atualizarResumo(fiados) {
-  const pendentes = fiados.filter(f => f.status !== "Pago");
-  const pagos = fiados.filter(f => f.status === "Pago");
-  const totalPendente = pendentes.reduce((s, f) => s + parseFloat(f.valor), 0);
-  const totalPago = pagos.reduce((s, f) => s + parseFloat(f.valor), 0);
+function fmtMoeda(v) {
+  return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
-  document.getElementById("statPendente").textContent = totalPendente.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  document.getElementById("statPago").textContent = totalPago.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  document.getElementById("statQtd").textContent = pendentes.length;
+// Deriva pendente/pago com segurança, mesmo se a API ainda não tiver
+// sido atualizada em algum ambiente.
+function getValores(fiado) {
+  const valor = Number(fiado.valor) || 0;
+  const valorPago = Number(fiado.valor_pago) || 0;
+  const valorPendente = fiado.valor_pendente != null
+    ? Number(fiado.valor_pendente)
+    : valor - valorPago;
+  return { valor, valorPago, valorPendente: Math.max(valorPendente, 0) };
+}
+
+function atualizarResumo(fiados) {
+  let totalPendente = 0;
+  let totalRecebido = 0;
+  let contasEmAberto = 0;
+
+  fiados.forEach(f => {
+    const { valorPago, valorPendente } = getValores(f);
+    totalPendente += valorPendente;
+    totalRecebido += valorPago;
+    if (f.status !== "Pago") contasEmAberto++;
+  });
+
+  document.getElementById("statPendente").textContent = fmtMoeda(totalPendente);
+  document.getElementById("statPago").textContent = fmtMoeda(totalRecebido);
+  document.getElementById("statQtd").textContent = contasEmAberto;
 }
 
 async function carregarFiados() {
@@ -222,6 +316,12 @@ async function carregarFiados() {
     loadingState.style.display = "none";
     showToast(err.message, true);
   }
+}
+
+function statusClasse(status) {
+  if (status === "Pago") return "pago";
+  if (status === "Parcial") return "parcial";
+  return "pendente";
 }
 
 function renderFiados() {
@@ -253,18 +353,24 @@ function renderFiados() {
 
   fiados.forEach((fiado) => {
       const pago = fiado.status === "Pago";
-      const valorFmt = parseFloat(fiado.valor).toFixed(2);
+      const parcial = fiado.status === "Parcial";
+      const classe = statusClasse(fiado.status);
+      const { valor, valorPendente } = getValores(fiado);
+
+      const valorCelulaHtml = parcial
+        ? `R$ ${valorPendente.toFixed(2)} <span class="original">de R$ ${valor.toFixed(2)}</span>`
+        : `R$ ${valor.toFixed(2)}`;
 
       // Linha da tabela (desktop)
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${fiado.cliente}</td>
         <td class="mono">${fiado.data}</td>
-        <td class="mono">R$ ${valorFmt}</td>
-        <td><span class="badge ${pago ? 'pago' : 'pendente'}">${fiado.status}</span></td>
+        <td class="mono valor-cell">${valorCelulaHtml}</td>
+        <td><span class="badge ${classe}">${fiado.status}</span></td>
         <td>
           <div class="actions">
-            ${!pago ? `<button class="action-btn pay-btn" data-action="pagar" data-id="${fiado.id}">Marcar pago</button>` : ""}
+            ${!pago ? `<button class="action-btn pay-btn" data-action="receber" data-id="${fiado.id}">Receber</button>` : ""}
             <button class="action-btn delete-btn" data-action="remover" data-id="${fiado.id}">Remover</button>
           </div>
         </td>
@@ -279,14 +385,15 @@ function renderFiados() {
           <div>
             <div class="fiado-card-cliente">${fiado.cliente}</div>
             <div class="fiado-card-data mono">${fiado.data}</div>
-            <span class="badge ${pago ? 'pago' : 'pendente'}">${fiado.status}</span>
+            <span class="badge ${classe}">${fiado.status}</span>
           </div>
           <div class="fiado-card-valor">
-            <span class="amount mono ${pago ? 'pago-color' : 'pendente-color'}">R$ ${valorFmt}</span>
+            <span class="amount mono ${classe}-color">R$ ${valorPendente.toFixed(2)}</span>
+            ${parcial ? `<span class="original mono">de R$ ${valor.toFixed(2)}</span>` : ""}
           </div>
         </div>
         <div class="fiado-card-actions">
-          ${!pago ? `<button class="action-btn pay-btn" data-action="pagar" data-id="${fiado.id}">Marcar pago</button>` : ""}
+          ${!pago ? `<button class="action-btn pay-btn" data-action="receber" data-id="${fiado.id}">Receber</button>` : ""}
           <button class="action-btn delete-btn" data-action="remover" data-id="${fiado.id}">Remover</button>
         </div>
       `;
@@ -294,15 +401,66 @@ function renderFiados() {
     });
 }
 
-async function marcarPago(id) {
+function abrirModalRecebimento(id) {
+  const fiado = todosFiados.find(f => f.id === id);
+  if (!fiado) return;
+
+  fiadoSelecionado = fiado;
+  const { valorPendente } = getValores(fiado);
+
+  modalCliente.textContent = fiado.cliente;
+  modalValorDevido.textContent = fmtMoeda(valorPendente);
+  modalValorReceber.value = valorPendente.toFixed(2);
+  modalValorReceber.max = valorPendente.toFixed(2);
+  modalFormaPagamento.value = "dinheiro";
+
+  modalOverlay.classList.add("open");
+  setTimeout(() => modalValorReceber.focus(), 50);
+}
+
+function fecharModal() {
+  modalOverlay.classList.remove("open");
+  fiadoSelecionado = null;
+}
+
+async function confirmarRecebimento() {
+  if (!fiadoSelecionado) return;
+
+  const { valorPendente } = getValores(fiadoSelecionado);
+  const valorRecebido = parseFloat(modalValorReceber.value);
+  const forma = modalFormaPagamento.value;
+
+  if (!valorRecebido || valorRecebido <= 0) {
+    showToast("Informe um valor válido.", true);
+    return;
+  }
+  if (valorRecebido > valorPendente + 0.01) {
+    showToast(`Valor maior que o pendente (${fmtMoeda(valorPendente)}).`, true);
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/contasareceber`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "Pago" })
+      body: JSON.stringify({
+        id: fiadoSelecionado.id,
+        valor_recebido: valorRecebido,
+        forma_pagamento: forma
+      })
     });
-    if (!res.ok) throw new Error("Erro ao atualizar status");
-    showToast("Conta marcada como paga");
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erro ao registrar recebimento");
+
+    const restante = Number(data.valor_pendente) || 0;
+    if (restante > 0.01) {
+      showToast(`Recebido ${fmtMoeda(valorRecebido)}. Restam ${fmtMoeda(restante)}.`);
+    } else {
+      showToast(`Conta quitada! Recebido ${fmtMoeda(valorRecebido)}.`);
+    }
+
+    fecharModal();
     carregarFiados();
   } catch (err) {
     showToast(err.message, true);
@@ -325,7 +483,7 @@ function handleActionClick(e) {
   const btn = e.target.closest('button');
   if (!btn) return;
   const id = Number(btn.dataset.id);
-  if (btn.dataset.action === 'pagar') marcarPago(id);
+  if (btn.dataset.action === 'receber') abrirModalRecebimento(id);
   if (btn.dataset.action === 'remover') remover(id);
 }
 
@@ -337,6 +495,21 @@ btnLimparFiltro.addEventListener('click', () => {
   filtroInput.value = "";
   filtroInput.focus();
   renderFiados();
+});
+
+document.getElementById("btnModalCancelar").addEventListener("click", fecharModal);
+document.getElementById("btnModalConfirmar").addEventListener("click", confirmarRecebimento);
+modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) fecharModal(); });
+
+document.getElementById("btnValorTotal").addEventListener("click", () => {
+  if (!fiadoSelecionado) return;
+  const { valorPendente } = getValores(fiadoSelecionado);
+  modalValorReceber.value = valorPendente.toFixed(2);
+});
+document.getElementById("btnValorMetade").addEventListener("click", () => {
+  if (!fiadoSelecionado) return;
+  const { valorPendente } = getValores(fiadoSelecionado);
+  modalValorReceber.value = (valorPendente / 2).toFixed(2);
 });
 
 carregarFiados();
